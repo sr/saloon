@@ -5,8 +5,8 @@ require 'couch_rest'
 require 'atom/entry'
 require 'atom/collection'
 
-class CollectionNotFound < RuntimeError
-end
+class CollectionNotFound < RuntimeError; end
+class EntryNotFound < RuntimeError; end
 
 class Store
   attr_reader :db_name
@@ -19,6 +19,12 @@ class Store
     rows = database.view('collection/all', :key => collection, :count => 1)['rows']
     raise CollectionNotFound if rows.empty?
     rows.first.to_atom_feed
+  end
+
+  def find_entry(collection, entry)
+    rows = database.view('entry/by_collection', :key => [collection, entry], :count => 1)['rows']
+    raise EntryNotFound if rows.empty?
+    rows.first.to_atom_entry
   end
 
   private
