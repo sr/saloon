@@ -1,5 +1,6 @@
 require 'rubygems'
 require 'atom/feed'
+require 'atom/entry'
 
 class Hash
   def stringify_keys
@@ -9,11 +10,19 @@ class Hash
     end
   end
 
+  def to_atom_entry
+    hash = self.stringify_keys
+    %w(title summary content).inject(Atom::Entry.new) do |entry, element|
+      entry.send("#{element}=", hash[element]) if hash[element]
+      entry
+    end
+  end
+
   def to_atom_feed
     hash = self.stringify_keys
     # TODO: support more elements
     %w(title subtitle).inject(Atom::Feed.new) do |feed, element|
-      feed.send("#{element}=", hash[element])
+      feed.send("#{element}=", hash[element]) if hash[element]
       feed
     end
   end

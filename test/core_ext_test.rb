@@ -1,19 +1,36 @@
 require File.dirname(__FILE__) + '/test_helper'
 require File.dirname(__FILE__) + '/../lib/core_ext'
 
-describe 'Hash#to_atom_feed' do
-  it 'returns an Atom::Feed' do
-    {}.to_atom_feed.should.be.an.instance_of Atom::Feed
+describe 'Hash#to_atom_entry' do
+  setup do
+    @hash = { :title => 'Atom-Powered Robots Run Amok',
+      :summary => 'Some text.',
+      :content => 'Even more text...' }
   end
 
-  it 'converts `title`' do
-    h = {:title => 'foobar'}
-    h.to_atom_feed.title.to_s.should.equal 'foobar'
+  it 'returns an Atom::Entry' do
+    @hash.to_atom_entry.should.be.an.instance_of Atom::Entry
   end
 
-  it 'converts `subtitle`' do
-    h = {:subtitle => 'run amok'}
-    h.to_atom_feed.subtitle.to_s.should.equal 'run amok'
+  %w(title summary content).map(&:to_sym).each do |element|
+    it "converts #{element}" do
+      @hash.to_atom_entry.send(element).to_s.should.equal @hash[element]
+    end
   end
 end
- 
+
+describe 'Hash#to_atom_feed' do
+  setup do
+    @hash = { :title => 'My AtomPub Feed', :subtitle => 'Has a Subtitle!' }
+  end
+
+  it 'returns an Atom::Feed' do
+    @hash.to_atom_feed.should.be.an.instance_of Atom::Feed
+  end
+
+  %w(title subtitle).map(&:to_sym).each do |element|
+    it "converts #{element}" do
+      @hash.to_atom_feed.send(element).to_s.should.equal @hash[element]
+    end
+  end
+end
