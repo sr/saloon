@@ -42,4 +42,13 @@ describe 'Store' do
       do_find.should.be.an.instance_of(Atom::Feed)
     end
   end
+
+  describe 'When finding an entry' do
+    def do_find
+      @store.find_entry('my_collection', 'my_entry')
+    end
+
+    it 'finds the entry using the view entry/by_collection' do
+    end
+  end
 end
