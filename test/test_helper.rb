@@ -4,4 +4,4 @@ require 'sinatra'
 require 'sinatra/test/spec'
 require 'mocha'
 
-TestDatabase = 'saloonrb-test'
+TestDatabase = 'saloonrb-test' unless defined?(TestDatabase)
