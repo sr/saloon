@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/../lib/store'
 
 describe 'Store' do
   setup do
-    @database = stub('couchdb database', :view => '')
+    @database = stub('couchdb database', :view => '', :save => '')
     @store = Store.new(TestDatabase)
     @store.stubs(:database).returns(@database)
   end
@@ -66,6 +66,29 @@ describe 'Store' do
     it 'coerce the document to an Atom::Entry using #to_atom_entry' do
       @rows.first.expects(:to_atom_entry).returns('an atom entry')
       do_find.should.equal 'an atom entry'
+    end
+  end
+
+  describe 'When creating an entry' do
+    def do_create
+      @store.create_entry('my_collection', @entry.to_s)
+    end
+
+    setup do
+      @entry = Atom::Entry.new(:title => 'foo', :content => 'bar')
+      Atom::Entry.stubs(:parse).returns(@entry)
+      Atom::Entry.any_instance.stubs(:to_h).returns({})
+    end
+
+    it 'parses the entry' do
+      Atom::Entry.expects(:parse).with(@entry.to_s).returns(@entry)
+      do_create
+    end
+
+    it 'coerces the parsed entry to an hash and saves it' do
+      @entry.expects(:to_h).returns('the entry')
+      @database.expects(:save).with('the entry')
+      do_create
     end
   end
 end

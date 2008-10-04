@@ -29,6 +29,11 @@ class Store
     document.to_atom_entry
   end
 
+  def create_entry(collection, entry)
+    entry = Atom::Entry.parse(entry)
+    database.save(entry.to_h)
+  end
+
   protected
     def get(view, key)
       response = database.view(view, :key => key, :count => 1)
