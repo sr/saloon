@@ -16,16 +16,22 @@ class Store
   end
 
   def find_collection(collection)
-    rows = database.view('collection/all', :key => collection, :count => 1)['rows']
-    raise CollectionNotFound if rows.empty?
-    rows.first.to_atom_feed
+    document = get('collection/all', collection)
+    raise CollectionNotFound unless document
+    document.to_atom_feed
   end
 
   def find_entry(collection, entry)
-    rows = database.view('entry/by_collection', :key => [collection, entry], :count => 1)['rows']
-    raise EntryNotFound if rows.empty?
-    rows.first.to_atom_entry
+    document = get('entry/by_collection', [collection, entry])
+    raise EntryNotFound unless document
+    document.to_atom_entry
   end
+
+  protected
+    def get(view, key)
+      response = database.view(view, :key => key, :count => 1)
+      response['rows'].empty? ? nil : response['rows'].first
+    end
 
   private
     def server
