@@ -5,6 +5,8 @@ require 'couch_rest'
 require 'atom/entry'
 require 'atom/collection'
 
+require File.dirname(__FILE__) + '/core_ext'
+
 class CollectionNotFound < RuntimeError; end
 class EntryNotFound < RuntimeError; end
 
