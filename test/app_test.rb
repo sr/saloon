@@ -53,4 +53,35 @@ describe 'App' do
       body.should.equal @collection.to_s
     end
   end
+
+  describe 'GET /:collection/:entry' do
+    def do_get
+      get_it '/articles/my_entry'
+    end
+
+    setup do
+      @entry = stub('an Atom::Entry', :to_s => 'hi, i am an atom entry')
+      @store.stubs(:find_entry).returns(@entry)
+    end
+
+    it 'is successful' do
+      do_get
+      should.be.ok
+    end
+
+    it 'is application/atom+xml;type=entry' do
+      do_get
+      headers['Content-Type'].should.equal 'application/atom+xml;type=entry'
+    end
+
+    it 'finds the entry in the given collection' do
+      @store.expects(:find_entry).with('articles', 'my_entry')
+      do_get
+    end
+
+    it 'returns the atom representation of the entry' do
+      do_get
+      body.should.equal @entry.to_s
+    end
+  end
 end
