@@ -22,5 +22,5 @@ end
 
 get '/:collection' do
   content_type :atom
-  store.find_collection(params[:collection])
+  store.find_collection(params[:collection]).to_s
 end

@@ -29,7 +29,8 @@ describe 'App' do
     end
 
     setup do
-      @store.stubs(:find_collection).returns(stub('an Atom::Collection'))
+      @collection = stub('an Atom::Collection', :to_s => 'collection')
+      @store.stubs(:find_collection).returns(@collection)
     end
 
     it 'is successful' do
@@ -43,8 +44,13 @@ describe 'App' do
     end
 
     it 'finds the given collection' do
-      @store.expects(:find_collection).with('articles').returns(stub('an Atom::Collection'))
+      @store.expects(:find_collection).with('articles').returns(@collection)
       do_get
+    end
+
+    it 'returns the atom representation of the collection' do
+      do_get
+      body.should.equal @collection.to_s
     end
   end
 end
