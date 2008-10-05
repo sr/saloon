@@ -17,6 +17,14 @@ helpers do
   end
 end
 
+error CollectionNotFound do
+  status 404
+end
+
+error EntryNotFound do
+  status 404
+end
+
 get '/' do
   content_type :atom_service
 end

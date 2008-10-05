@@ -52,6 +52,17 @@ describe 'App' do
       do_get
       body.should.equal @collection.to_s
     end
+
+    describe 'When the collection is not found' do
+      setup do
+        @store.stubs(:find_collection).raises(CollectionNotFound)
+      end
+
+      it 'is not found' do
+        get_it '/articles'
+        should.be.not_found
+      end
+    end
   end
 
   describe 'GET /:collection/:entry' do
@@ -82,6 +93,17 @@ describe 'App' do
     it 'returns the atom representation of the entry' do
       do_get
       body.should.equal @entry.to_s
+    end
+
+    describe 'When the entry is not found' do
+      setup do
+        @store.stubs(:find_entry).raises(EntryNotFound)
+      end
+
+      it 'is not found' do
+        get_it '/articles/my_entry'
+        should.be.not_found
+      end
     end
   end
 end
