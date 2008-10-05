@@ -75,9 +75,16 @@ describe 'Store' do
     end
 
     setup do
-      @entry = Atom::Entry.new(:title => 'foo', :content => 'bar')
+      @store.stubs(:find_collection)
+      @hash = {:title => 'foo', :content => 'bar'}
+      @entry = Atom::Entry.new(@hash)
+      @entry.stubs(:to_h).returns(@hash)
       Atom::Entry.stubs(:parse).returns(@entry)
-      Atom::Entry.any_instance.stubs(:to_h).returns({})
+    end
+
+    it 'finds the collection' do
+      @store.expects(:find_collection).with('my_collection')
+      do_create
     end
 
     it 'parses the entry' do
@@ -85,10 +92,24 @@ describe 'Store' do
       do_create
     end
 
-    it 'coerces the parsed entry to an hash and saves it' do
-      @entry.expects(:to_h).returns('the entry')
-      @database.expects(:save).with('the entry')
+    it 'coerces the parsed entry to an hash' do
+      @entry.expects(:to_h).returns(@hash)
       do_create
+    end
+
+    it 'saves the hash to the database' do
+      @database.expects(:save).with(@hash)
+      do_create
+    end
+
+    it 'sets the type of the document to "entry"' do
+      do_create
+      @hash[:type].should.equal 'entry'
+    end
+
+    it 'sets the collection to which the entry belongs' do
+      do_create
+      @hash[:collection].should.equal 'my_collection'
     end
   end
 end

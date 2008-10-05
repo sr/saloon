@@ -30,8 +30,9 @@ class Store
   end
 
   def create_entry(collection, entry)
+    find_collection(collection)
     entry = Atom::Entry.parse(entry)
-    database.save(entry.to_h)
+    database.save(entry.to_h.merge!(:type => 'entry', :collection => collection))
   end
 
   protected
