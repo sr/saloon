@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+require 'fileutils'
+
+DefaultViewFunction = <<-EOF
+function(doc) {
+  emit(null, doc);
+}
+EOF
+
+view_name = ARGV.shift
+directory = File.join(Dir.pwd, 'views', view_name)
+FileUtils.mkdir_p(directory)
+File.open(File.join(directory, 'all-map.js'), 'w') { |f| f << DefaultViewFunction }

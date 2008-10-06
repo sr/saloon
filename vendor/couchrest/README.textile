@@ -1,0 +1,31 @@
+h1. Yet Another CouchDB Library
+
+Yeah that's right, yet another "CouchDB":http://couchdb.org library. Like all the others, mine has its own originality.
+It is a fork of "jchris's CouchRest":http://github.com/jchris/couchrest. Everything started as an Hardcore Forking Action. I ended:
+
+* Modifying the organisation of the library
+* Writing more tests. The legacy tests are more integration test while those I wrote are unit tests.
+* DRY it up
+
+h2. Example
+
+bc.. server = CouchRest.new
+database = server.database('articles')
+database.save(:title => 'foo', :content => 'bar')
+database.view('articles/by_author', :key => 'John Doe')
+
+h2. Requirements
+
+The fellowing gems are required:
+
+* rest-client
+* addressable
+
+To run the test, you also need :
+
+* test/spec
+* mocha
+* rcov
+* rspec (for the legacy tests)
+
+and yard to generate the documentation.
