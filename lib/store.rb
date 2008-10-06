@@ -18,9 +18,13 @@ class Store
   end
 
   def find_collection(collection)
-    document = get('collection/all', collection)
-    raise CollectionNotFound unless document
-    document.to_atom_feed
+    rows = database.view('entry/by_collection',
+      :startkey => [collection, 0], :endkey => [collection, 1])['rows']
+    raise CollectionNotFound unless atom_collection = atom_collection_from(rows)
+    atom_entries_from(rows).inject(atom_collection) do |collection, entry|
+      collection.entries << entry
+      collection
+    end
   end
 
   def find_entry(collection, entry)
@@ -39,6 +43,16 @@ class Store
     def get(view, key)
       response = database.view(view, :key => key, :count => 1)
       response['rows'].empty? ? nil : response['rows'].first
+    end
+
+    def atom_collection_from(rows)
+      collection = rows.detect { |row| row['value']['type'] == 'collection' }
+      collection ? collection['value'].to_atom_feed : nil
+    end
+
+    def atom_entries_from(rows)
+      entries = rows.select { |row| row['value']['type'] == 'entry' }
+      entries.any? ? entries.map { |r| r['value'].to_atom_entry } : nil
     end
 
   private

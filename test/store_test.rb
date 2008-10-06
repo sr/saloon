@@ -6,10 +6,57 @@ describe 'Store' do
     @database = stub('couchdb database', :view => '', :save => '')
     @store = Store.new(TestDatabase)
     @store.stubs(:database).returns(@database)
+    @rows = [
+      { 'id' => 'my_collection',
+        'key' => ['my_collection', 0],
+        'value' => {'_id' => 'my_collection', 'type' => 'collection', 'title' => 'My AtomPub Collection'}},
+      { 'id' => 'my_entry',
+        'key' => ['my_collection', 1],
+        'value' => {'_id' => 'my_entry_2', 'type' => 'entry',
+                    'title' => 'Entry 1', 'content' => 'foobar'}},
+      { 'id' => 'my_entry',
+        'key' => ['my_collection', 1],
+        'value' => {'_id' => 'my_entry_2', 'type' => 'entry',
+                    'title' => 'Entry 2', 'content' => 'foobar'}}
+    ]
   end
 
   it 'has a  db_name' do
     @store.db_name.should.equal TestDatabase
+  end
+
+  describe 'Helpers' do
+    setup do
+      Store.class_eval { public :atom_collection_from, :atom_entries_from }
+      @store = Store.new(TestDatabase)
+    end
+
+    describe '#atom_collection_from' do
+      it 'extracts the first row that is a collection an returns an Atom::Feed' do
+        @store.atom_collection_from(@rows).should.be.an.instance_of(Atom::Feed)
+        @store.atom_collection_from(@rows).title.to_s.should.equal 'My AtomPub Collection'
+      end
+
+      it 'returns nil if no collection was found' do
+        @store.atom_collection_from([]).should.be.nil
+      end
+    end
+
+    describe '#atom_entries_from' do
+      it 'finds two entries' do
+        @store.atom_entries_from(@rows).length.should.equal 2
+      end
+
+      it 'returns Atom::Entry-ies' do
+        @store.atom_entries_from(@rows).each { |e| e.should.be.an.instance_of(Atom::Entry) }
+        @store.atom_entries_from(@rows).first.title.to_s.should.equal 'Entry 1'
+        @store.atom_entries_from(@rows).last.title.to_s.should.equal 'Entry 2'
+      end
+
+      it 'returns nil if no entries were found' do
+        @store.atom_entries_from([]).should.be.nil
+      end
+    end
   end
 
   describe 'When finding a collection' do
@@ -18,25 +65,36 @@ describe 'Store' do
     end
 
     setup do
-      @rows = [{'title' => 'foo', 'subtitle' => 'bar'}]
       @database.stubs(:view).returns('rows' => @rows)
-      Hash.any_instance.stubs(:to_atom_feed).returns(Atom::Feed.new)
     end
 
-    it 'finds the collection using the view collection/all' do
-      @database.expects(:view).with('collection/all',
-        :key => 'my_collection', :count => 1).returns('rows' => @rows)
+    it 'finds the collection using the view entry/by_collection' do
+      @database.expects(:view).with('entry/by_collection',
+        :startkey => ['my_collection', 0], :endkey => ['my_collection', 1]).
+        returns('rows' => @rows)
+      do_find
+    end
+
+    it 'extracts the collection from the result set' do
+      @store.expects(:atom_collection_from).with(@rows).returns(Atom::Feed.new)
+      do_find
+    end
+
+    it 'extracts the entries from the result set' do
+      @store.expects(:atom_entries_from).with(@rows).returns([Atom::Entry.new, Atom::Entry.new])
       do_find
     end
 
     it 'raises CollectionNotFound if no collection were found' do
-      @database.stubs(:view).returns('rows' => [])
+      @store.stubs(:atom_collection_from).returns(nil)
       lambda { do_find }.should.raise CollectionNotFound
     end
 
-    it 'coerce the document to an Atom::Feed using #to_atom_feed' do
-      @rows.first.expects(:to_atom_feed).returns('an atom feed')
-      do_find.should.equal 'an atom feed'
+    it 'returns an Atom::Feed with the entries' do
+      do_find.should.be.an.instance_of(Atom::Feed)
+      do_find.entries.length.should.equal 2
+      do_find.entries.first.title.to_s.should.equal 'Entry 1'
+      do_find.entries.last.title.to_s.should.equal 'Entry 2'
     end
   end
 
