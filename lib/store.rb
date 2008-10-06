@@ -28,9 +28,8 @@ class Store
   end
 
   def find_entry(collection, entry)
-    document = get('entry/by_collection', [collection, entry])
-    raise EntryNotFound unless document
-    document.to_atom_entry
+    document = get('entry/by_collection_and_entry', [collection, entry])
+    document ? document['value'].to_atom_entry : raise(EntryNotFound)
   end
 
   def create_entry(collection, entry)

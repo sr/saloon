@@ -44,6 +44,29 @@ describe 'Store' do
       store.database
     end
 
+    describe '#get' do
+      setup do
+        Store.class_eval { public :get }
+        @store = Store.new(TestDatabase)
+        @store.stubs(:database).returns(@database)
+      end
+
+      it 'query the given view with the given key and limit to a single row' do
+        @database.expects(:view).with('my_view/all', :key => 'the key', :count => 1).returns('rows' => [])
+        @store.get('my_view/all', 'the key')
+      end
+
+      it 'returns the first row' do
+        @database.stubs(:view).returns('rows' => ['foo', 'bar'])
+        @store.get('my_view/all', 'the key').should.equal 'foo'
+      end
+
+      it 'returns nil if no document was found' do
+        @database.stubs(:view).returns('rows' => [])
+        @store.get('my_view/all', 'the key').should.be.nil
+      end
+    end
+
     describe '#atom_collection_from' do
       it 'extracts the first row that is a collection an returns an Atom::Feed' do
         @store.atom_collection_from(@rows).should.be.an.instance_of(Atom::Feed)
@@ -117,25 +140,24 @@ describe 'Store' do
     end
 
     setup do
-      @rows = [{'title' => 'foo', 'content' => 'bar'}]
-      @database.stubs(:view).returns('rows' => @rows)
+      @doc = @rows.last
+      @store.stubs(:get).returns(@doc)
       Hash.any_instance.stubs(:to_atom_entry).returns(Atom::Entry.new)
     end
 
     it 'finds the entry using the view entry/by_collection' do
-      @database.expects(:view).with('entry/by_collection',
-        :key => ['my_collection', 'my_entry'], :count => 1).
-        returns('rows' => @rows)
+      @store.expects(:get).with('entry/by_collection_and_entry',
+        ['my_collection', 'my_entry']).returns(@doc)
       do_find
     end
 
     it 'raises EntryNotFound if no entry were found in the given collection' do
-      @database.stubs(:view).returns('rows' => [])
+      @store.stubs(:get).returns(nil)
       lambda { do_find }.should.raise EntryNotFound
     end
 
-    it 'coerce the document to an Atom::Entry using #to_atom_entry' do
-      @rows.first.expects(:to_atom_entry).returns('an atom entry')
+    it 'coerces the document to an Atom::Entry' do
+      @doc['value'].expects(:to_atom_entry).returns('an atom entry')
       do_find.should.equal 'an atom entry'
     end
   end
