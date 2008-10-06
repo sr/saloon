@@ -9,7 +9,8 @@ describe 'Store' do
     @rows = [
       { 'id' => 'my_collection',
         'key' => ['my_collection', 0],
-        'value' => {'_id' => 'my_collection', 'type' => 'collection', 'title' => 'My AtomPub Collection'}},
+        'value' => {'_id' => 'my_collection', 'type' => 'collection',
+        'title' => 'My AtomPub Collection'}},
       { 'id' => 'my_entry',
         'key' => ['my_collection', 1],
         'value' => {'_id' => 'my_entry_2', 'type' => 'entry',
@@ -142,7 +143,6 @@ describe 'Store' do
     setup do
       @doc = @rows.last
       @store.stubs(:get).returns(@doc)
-      Hash.any_instance.stubs(:to_atom_entry).returns(Atom::Entry.new)
     end
 
     it 'finds the entry using the view entry/by_collection' do
@@ -156,7 +156,7 @@ describe 'Store' do
       lambda { do_find }.should.raise EntryNotFound
     end
 
-    it 'coerces the document to an Atom::Entry' do
+    it 'coerces the document to an Atom::Entry and returns it' do
       @doc['value'].expects(:to_atom_entry).returns('an atom entry')
       do_find.should.equal 'an atom entry'
     end
