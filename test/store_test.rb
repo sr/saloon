@@ -31,6 +31,19 @@ describe 'Store' do
       @store = Store.new(TestDatabase)
     end
 
+    specify '#server returns a new CouchRest object' do
+      Store.class_eval { public :server }
+      CouchRest.expects(:new)
+      Store.new(TestDatabase).server
+    end
+
+    specify '#database returns a new CouchRest::Database object' do
+      Store.class_eval { public :database }
+      store = Store.new(TestDatabase)
+      store.server.expects(:database).with(TestDatabase)
+      store.database
+    end
+
     describe '#atom_collection_from' do
       it 'extracts the first row that is a collection an returns an Atom::Feed' do
         @store.atom_collection_from(@rows).should.be.an.instance_of(Atom::Feed)
