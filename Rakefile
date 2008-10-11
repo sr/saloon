@@ -14,7 +14,8 @@ $database = $couch.database(DatabaseName)
 task :default => :test
 
 task :test do
-  sh 'testrb test/*.rb' end
+  sh 'testrb test/*.rb'
+end
 
 task :coverage => :"coverage:verify"
 Rcov::RcovTask.new('coverage:generate') do |t|
@@ -60,7 +61,7 @@ namespace :database do
         puts "Saving sample collection document #{i}"
         $database.save('_id' => "#{CollectionId}_#{i}",
           :type       => 'collection',
-          :base       => "http://0.0.0.0:1234/#{CollectionId}_#{i}",
+          :base       => "http://0.0.0.0:1234/#{CollectionId}_#{i}/",
           :title      => "My AtomPub Collection #{i}",
           :authors    => [{:name => 'Simon Rozet', :uri => 'http://purl.org/net/sr/'}])
       end
@@ -73,6 +74,8 @@ namespace :database do
         $database.save('_id' => "entry_#{i}",
           :collection => "#{CollectionId}_#{i}",
           :type       => 'entry',
+          :links      => [{:rel => 'edit',
+                          :href => "http://0.0.0.0:1234/#{CollectionId}_#{i}/entry_#{i}"}],
           :title      => "Sample Entry #{i}",
           :updated    => Time.mktime(2008, 1, 1+i),
           :content    => "Content of the entry number #{i}.")
