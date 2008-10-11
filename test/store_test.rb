@@ -28,32 +28,32 @@ describe 'Store' do
 
   describe 'Helpers' do
     setup do
-      Store.class_eval { public :atom_collection_from, :atom_entries_from }
+      Store.class_eval do
+        public :server, :database
+        public :get_collection!, :get_entry!, :get
+        public :atom_entries_from, :atom_collection_from
+      end
+
       @store = Store.new(TestDatabase)
+      @store.stubs(:database).returns(@database)
     end
 
     specify '#server returns a new CouchRest object' do
-      Store.class_eval { public :server }
       CouchRest.expects(:new)
       Store.new(TestDatabase).server
     end
 
     specify '#database returns a new CouchRest::Database object' do
       Store.class_eval { public :database }
-      store = Store.new(TestDatabase)
-      store.server.expects(:database).with(TestDatabase)
+      store = Store.new('foo')
+      store.server.expects(:database).with('foo')
       store.database
     end
 
     describe '#get' do
-      setup do
-        Store.class_eval { public :get }
-        @store = Store.new(TestDatabase)
-        @store.stubs(:database).returns(@database)
-      end
-
       it 'query the given view with the given key and limit to a single row' do
-        @database.expects(:view).with('my_view/all', :key => 'the key', :count => 1).returns('rows' => [])
+        @database.expects(:view).with('my_view/all', :key => 'the key', :count => 1).
+          returns('rows' => [])
         @store.get('my_view/all', 'the key')
       end
 
@@ -69,12 +69,6 @@ describe 'Store' do
     end
 
     describe '#get_entry!' do
-      setup do
-        Store.class_eval { public :get_entry! }
-        @store = Store.new(TestDatabase)
-        @store.stubs(:database).returns(@database)
-      end
-
       it 'gets the view "entry/by_collection_and_entry' do
         @store.expects(:get).with('entry/by_collection_and_entry',
           ['my_collection', 'my_entry']).returns('something')
@@ -86,6 +80,20 @@ describe 'Store' do
         lambda do
           @store.get_entry!('my_collection', 'my_entry')
         end.should.raise EntryNotFound
+      end
+    end
+
+    describe '#get_collection!' do
+      it 'gets the view "collection/all"' do
+        @store.expects(:get).with('collection/all', 'my_collection').returns('smthng')
+        @store.get_collection!('my_collection')
+      end
+
+      it 'raises CollectionNotFound if no collection was found' do
+        @store.stubs(:get).returns(nil)
+        lambda do
+          @store.get_collection!('my_collection')
+        end.should.raise CollectionNotFound
       end
     end
 
