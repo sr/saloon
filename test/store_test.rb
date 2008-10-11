@@ -68,6 +68,27 @@ describe 'Store' do
       end
     end
 
+    describe '#get_entry!' do
+      setup do
+        Store.class_eval { public :get_entry! }
+        @store = Store.new(TestDatabase)
+        @store.stubs(:database).returns(@database)
+      end
+
+      it 'gets the view "entry/by_collection_and_entry' do
+        @store.expects(:get).with('entry/by_collection_and_entry',
+          ['my_collection', 'my_entry']).returns('something')
+        @store.get_entry!('my_collection', 'my_entry')
+      end
+
+      it 'raises EntryNotFound if no entry was found' do
+        @store.stubs(:get).returns(nil)
+        lambda do
+          @store.get_entry!('my_collection', 'my_entry')
+        end.should.raise EntryNotFound
+      end
+    end
+
     describe '#atom_collection_from' do
       it 'extracts the first row that is a collection an returns an Atom::Feed' do
         @store.atom_collection_from(@rows).should.be.an.instance_of(Atom::Feed)
@@ -141,23 +162,17 @@ describe 'Store' do
     end
 
     setup do
-      @doc = @rows.last
-      @store.stubs(:get).returns(@doc)
+      @entry = stub('some entry', :to_atom_entry => Atom::Entry.new)
+      @store.stubs(:get_entry!).returns(@entry)
     end
 
-    it 'finds the entry using the view entry/by_collection' do
-      @store.expects(:get).with('entry/by_collection_and_entry',
-        ['my_collection', 'my_entry']).returns(@doc)
+    it 'finds the entry' do
+      @store.expects(:get_entry!).with('my_collection', 'my_entry').returns(@entry)
       do_find
     end
 
-    it 'raises EntryNotFound if no entry were found in the given collection' do
-      @store.stubs(:get).returns(nil)
-      lambda { do_find }.should.raise EntryNotFound
-    end
-
     it 'coerces the document to an Atom::Entry and returns it' do
-      @doc['value'].expects(:to_atom_entry).returns('an atom entry')
+      @entry.expects(:to_atom_entry).returns('an atom entry')
       do_find.should.equal 'an atom entry'
     end
   end

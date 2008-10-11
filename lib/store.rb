@@ -28,8 +28,7 @@ class Store
   end
 
   def find_entry(collection, entry)
-    document = get('entry/by_collection_and_entry', [collection, entry])
-    document ? document['value'].to_atom_entry : raise(EntryNotFound)
+    get_entry!(collection, entry).to_atom_entry
   end
 
   def create_entry(collection, entry)
@@ -42,6 +41,11 @@ class Store
   end
 
   protected
+    def get_entry!(collection, entry)
+      get('entry/by_collection_and_entry', [collection, entry]) ||
+        raise(EntryNotFound)
+    end
+
     def get(view, key)
       response = database.view(view, :key => key, :count => 1)
       response['rows'].empty? ? nil : response['rows'].first
