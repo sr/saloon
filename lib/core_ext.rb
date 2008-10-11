@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'addressable/uri'
 require 'atom/feed'
 require 'atom/entry'
 
@@ -9,6 +10,12 @@ module Atom
         self['href']     == link['href'] &&
         self['rel']      == link['rel']
     end
+  end
+end
+
+class String
+  def to_uri
+    Addressable::URI.parse(self)
   end
 end
 

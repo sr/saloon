@@ -1,7 +1,13 @@
 require File.dirname(__FILE__) + '/test_helper'
 require File.dirname(__FILE__) + '/../lib/core_ext'
 
-describe 'Hash with mixin HashToAtomEntry' do
+describe 'String#to_uri' do
+  it 'parses itselfs into an Addressable::URI' do
+    'http://foo.org'.to_uri.should.equal Addressable::URI.parse('http://foo.org')
+  end
+end
+
+describe 'Hash#to_atom_entry' do
   setup do
     @hash = { :title => 'Atom-Powered Robots Run Amok',
       :summary    => 'Some text.',
