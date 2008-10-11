@@ -26,7 +26,7 @@ class Hash
   def to_atom_feed
     hash = self.stringify_keys
     # TODO: support more elements
-    %w(title subtitle).inject(Atom::Feed.new) do |feed, element|
+    %w(base title subtitle).inject(Atom::Feed.new) do |feed, element|
       feed.send("#{element}=", hash[element]) if hash[element]
       feed
     end

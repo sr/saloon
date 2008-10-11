@@ -25,14 +25,16 @@ end
 
 describe 'Hash#to_atom_feed' do
   setup do
-    @hash = { :title => 'My AtomPub Feed', :subtitle => 'Has a Subtitle!' }
+    @hash = { :title => 'My AtomPub Feed',
+      :subtitle => 'Has a Subtitle!',
+      :base     => 'http://0.0.0.0:1234/' }
   end
 
   it 'returns an Atom::Feed' do
     @hash.to_atom_feed.should.be.an.instance_of Atom::Feed
   end
 
-  %w(title subtitle).map(&:to_sym).each do |element|
+  %w(base title subtitle).map(&:to_sym).each do |element|
     it "converts #{element}" do
       @hash.to_atom_feed.send(element).to_s.should.equal @hash[element]
     end
