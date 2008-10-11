@@ -183,15 +183,19 @@ describe 'Store' do
     end
 
     setup do
-      @store.stubs(:find_collection)
+      @collection = stub('some collection', :base => 'http://foo.org/my_coll/')
+      @collection.stubs(:to_atom_feed).returns(@collection)
+      @store.stubs(:get_collection!).returns(@collection)
       @hash = {:title => 'foo', :content => 'bar'}
       @entry = Atom::Entry.new(@hash)
       @entry.stubs(:to_h).returns(@hash)
       Atom::Entry.stubs(:parse).returns(@entry)
+      @database.stubs(:save).returns('id' => 1234)
     end
 
-    it 'finds the collection' do
-      @store.expects(:find_collection).with('my_collection')
+    it 'gets the collection' do
+      @store.expects(:get_collection!).with('my_collection').
+        returns(@collection)
       do_create
     end
 
@@ -231,7 +235,18 @@ describe 'Store' do
     end
 
     it 'saves the hash to the database' do
-      @database.expects(:save).with(@hash)
+      @database.expects(:save).with(@hash).returns('id' => 1234)
+      do_create
+    end
+
+    it 'sets the entry edit_url using the returned id' do
+      @entry.expects(:edit_url=).with('http://foo.org/my_coll/1234')
+      do_create
+    end
+
+    it 'updated the just-saved entry with the updated edit link' do
+      @database.expects(:save).with(@hash.update('_id' => 1234,
+        :links => [{:rel => 'edit', :href => 'http://foo.org/my_coll/1234'}])).returns({})
       do_create
     end
   end
@@ -255,7 +270,7 @@ describe 'Store' do
       @store.stubs(:get_entry!).returns(@hash)
     end
 
-    it 'parses the entry' do
+    it 'parses the new entry' do
       Atom::Entry.expects(:parse).with(@new_entry.to_s).returns(@new_entry)
       do_update
     end
@@ -265,29 +280,23 @@ describe 'Store' do
       do_update
     end
 
-    it 'merges the entry with the new one' do
-      @new_entry.expects(:to_h).returns(@new_entry_h)
-      @hash.expects(:merge!).with(@new_entry_h).returns(@hash)
-      do_update
-    end
-
-    it 'coerces the updated entry to an Atom::Entry' do
+    it 'coerces the entry to update to Atom::Entry' do
       @hash.expects(:to_atom_entry).returns(@entry)
       do_update
     end
 
-    it 'marks the entry as edited' do
-      @entry.expects(:edited!)
+    it 'marks the new entry as edited' do
+      @new_entry.expects(:edited!)
       do_update
     end
 
-    it 'marks the entry as updated' do
-      @entry.expects(:updated!)
+    it 'marks the new entry as updated' do
+      @new_entry.expects(:updated!)
       do_update
     end
 
     it 'saves the updated entry' do
-      @database.expects(:save).with(@hash)
+      @database.expects(:save).with(@new_entry_h)
       do_update
     end
   end
