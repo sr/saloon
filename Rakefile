@@ -60,6 +60,7 @@ namespace :database do
         puts "Saving sample collection document #{i}"
         $database.save('_id' => "#{CollectionId}_#{i}",
           :type       => 'collection',
+          :base       => "http://0.0.0.0:1234/#{CollectionId}_#{i}",
           :title      => "My AtomPub Collection #{i}",
           :authors    => [{:name => 'Simon Rozet', :uri => 'http://purl.org/net/sr/'}])
       end
