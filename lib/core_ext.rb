@@ -2,6 +2,16 @@ require 'rubygems'
 require 'atom/feed'
 require 'atom/entry'
 
+module Atom
+  class Link
+    def ==(link)
+      self['extensions'] == link['extensions'] &&
+        self['href']     == link['href'] &&
+        self['rel']      == link['rel']
+    end
+  end
+end
+
 class Hash
   def stringify_keys
     inject({}) do |options, (key, value)|
@@ -17,8 +27,15 @@ class Hash
     content
     published
     edited
-    updated).inject(Atom::Entry.new) do |entry, element|
-      entry.send("#{element}=", hash[element]) if hash[element]
+    updated
+    links).inject(Atom::Entry.new) do |entry, element|
+      case element
+      when 'links'
+        hash['links'].each { |link| entry.links.new(link) }
+      else
+        entry.send("#{element}=", hash[element])
+      end if hash[element]
+
       entry
     end
   end

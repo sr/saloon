@@ -8,7 +8,13 @@ describe 'Hash#to_atom_entry' do
       :content    => 'Even more text...',
       :published  => Time.now,
       :updated    => Time.now,
-      :edited     => Time.now
+      :edited     => Time.now,
+      :links      => [
+        { :rel => 'self',
+          :href => 'http://foo.org/bar/spam.atom' },
+        { :rel => 'edit',
+          :href => 'http://foo.org/edit/bar' }
+      ]
     }
   end
 
@@ -20,6 +26,16 @@ describe 'Hash#to_atom_entry' do
     it "converts #{element}" do
       @hash.to_atom_entry.send(element).to_s.should.equal @hash[element].to_s
     end
+  end
+
+  it 'converts link[@rel="self"]' do
+    @hash.to_atom_entry.links.detect { |link| link['rel'] == 'self' }.should.
+      equal Atom::Link.new(@hash[:links].first)
+  end
+
+  it 'converts link[@rel="edit"]' do
+    @hash.to_atom_entry.links.detect { |link| link['rel'] == 'edit' }.should.
+      equal Atom::Link.new(@hash[:links].last)
   end
 end
 
