@@ -14,21 +14,28 @@ end
 
 class Hash
   def stringify_keys
-    inject({}) do |options, (key, value)|
-      options[key.to_s] = value
-      options
+    inject({}) do |hash, (key, value)|
+      hash[key.to_s] = value
+      hash
+    end
+  end
+
+  FeedElements = %w(base title subtitle).freeze
+  EntryElements = %w(title summary content published edited updated links).freeze
+
+  def to_atom_feed
+    hash = stringify_keys
+
+    FeedElements.inject(Atom::Feed.new) do |feed, element|
+      feed.send("#{element}=", hash[element]) if hash[element]
+      feed
     end
   end
 
   def to_atom_entry
-    hash = self.stringify_keys
-    %w(title
-    summary
-    content
-    published
-    edited
-    updated
-    links).inject(Atom::Entry.new) do |entry, element|
+    hash = stringify_keys
+
+    EntryElements.inject(Atom::Entry.new) do |entry, element|
       case element
       when 'links'
         hash['links'].each { |link| entry.links.new(link) }
@@ -37,15 +44,6 @@ class Hash
       end if hash[element]
 
       entry
-    end
-  end
-
-  def to_atom_feed
-    hash = self.stringify_keys
-    # TODO: support more elements
-    %w(base title subtitle).inject(Atom::Feed.new) do |feed, element|
-      feed.send("#{element}=", hash[element]) if hash[element]
-      feed
     end
   end
 end
