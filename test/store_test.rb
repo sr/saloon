@@ -235,4 +235,60 @@ describe 'Store' do
       do_create
     end
   end
+
+  describe 'When updating an entry' do
+    def do_update
+      @store.update_entry('my_collection', 'my_entry', @new_entry.to_s)
+    end
+
+    setup do
+      @new_entry_h = {:title => 'ghostface', :content => 'killah'}
+      @new_entry = Atom::Entry.new(@new_entry_h)
+      @new_entry.stubs(:to_h).returns(@new_entry_h)
+
+      @hash = {:title => 'foo', :content => 'bar'}
+      @entry = Atom::Entry.new(@hash)
+      @entry.stubs(:to_h).returns(@hash)
+      @hash.stubs(:to_atom_entry).returns(@entry)
+
+      Atom::Entry.stubs(:parse).returns(@new_entry)
+      @store.stubs(:get_entry!).returns(@hash)
+    end
+
+    it 'parses the entry' do
+      Atom::Entry.expects(:parse).with(@new_entry.to_s).returns(@new_entry)
+      do_update
+    end
+
+    it 'gets the entry to update' do
+      @store.expects(:get_entry!).with('my_collection', 'my_entry').returns(@hash)
+      do_update
+    end
+
+    it 'merges the entry with the new one' do
+      @new_entry.expects(:to_h).returns(@new_entry_h)
+      @hash.expects(:merge!).with(@new_entry_h).returns(@hash)
+      do_update
+    end
+
+    it 'coerces the updated entry to an Atom::Entry' do
+      @hash.expects(:to_atom_entry).returns(@entry)
+      do_update
+    end
+
+    it 'marks the entry as edited' do
+      @entry.expects(:edited!)
+      do_update
+    end
+
+    it 'marks the entry as updated' do
+      @entry.expects(:updated!)
+      do_update
+    end
+
+    it 'saves the updated entry' do
+      @database.expects(:save).with(@hash)
+      do_update
+    end
+  end
 end
