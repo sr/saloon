@@ -12,7 +12,12 @@ class Hash
 
   def to_atom_entry
     hash = self.stringify_keys
-    %w(title summary content).inject(Atom::Entry.new) do |entry, element|
+    %w(title
+    summary
+    content
+    published
+    edited
+    updated).inject(Atom::Entry.new) do |entry, element|
       entry.send("#{element}=", hash[element]) if hash[element]
       entry
     end

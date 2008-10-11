@@ -35,6 +35,9 @@ class Store
   def create_entry(collection, entry)
     find_collection(collection)
     entry = Atom::Entry.parse(entry)
+    entry.published!
+    entry.updated!
+    entry.edited!
     database.save(entry.to_h.merge!(:type => 'entry', :collection => collection))
   end
 
@@ -51,7 +54,7 @@ class Store
 
     def atom_entries_from(rows)
       entries = rows.select { |row| row['value']['type'] == 'entry' }
-      entries.any? ? entries.map { |r| r['value'].to_atom_entry } : nil
+      entries.any? ? entries.map { |row| row['value'].to_atom_entry } : nil
     end
 
   private

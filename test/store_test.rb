@@ -185,13 +185,23 @@ describe 'Store' do
       do_create
     end
 
-    it 'coerces the parsed entry to an hash' do
-      @entry.expects(:to_h).returns(@hash)
+    it 'sets the app:edited element to now' do
+      @entry.expects(:edited!)
       do_create
     end
 
-    it 'saves the hash to the database' do
-      @database.expects(:save).with(@hash)
+    it 'sets the updated element to now' do
+      @entry.expects(:updated!)
+      do_create
+    end
+
+    it 'sets the published element to now' do
+      @entry.expects(:published!)
+      do_create
+    end
+
+    it 'coerces the parsed entry to an hash' do
+      @entry.expects(:to_h).returns(@hash)
       do_create
     end
 
@@ -203,6 +213,11 @@ describe 'Store' do
     it 'sets the collection to which the entry belongs' do
       do_create
       @hash[:collection].should.equal 'my_collection'
+    end
+
+    it 'saves the hash to the database' do
+      @database.expects(:save).with(@hash)
+      do_create
     end
   end
 end
