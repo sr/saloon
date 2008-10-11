@@ -11,6 +11,28 @@ module Atom
         self['rel']      == link['rel']
     end
   end
+
+  class Entry
+    Elements = %w(title summary content published edited updated links).freeze
+
+    def to_h
+      Elements.inject({}) do |hash, element|
+        case element
+        when 'links'
+          hash['links'] = links.inject([]) do |links, link|
+            # TODO: Atom::Link#to_h instead
+            links << {:rel => link['rel'], :href => link['href']}
+            links
+          end
+        else
+          if value = self.send(element)
+            hash[element] = value.to_s
+          end
+        end
+        hash
+      end
+    end
+  end
 end
 
 class String
@@ -28,7 +50,6 @@ class Hash
   end
 
   FeedElements = %w(base title subtitle).freeze
-  EntryElements = %w(title summary content published edited updated links).freeze
 
   def to_atom_feed
     hash = stringify_keys
@@ -42,7 +63,7 @@ class Hash
   def to_atom_entry
     hash = stringify_keys
 
-    EntryElements.inject(Atom::Entry.new) do |entry, element|
+    Atom::Entry::Elements.inject(Atom::Entry.new) do |entry, element|
       case element
       when 'links'
         hash['links'].each { |link| entry.links.new(link) }
