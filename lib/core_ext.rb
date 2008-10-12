@@ -35,6 +35,12 @@ module Atom
   end
 end
 
+Addressable::URI.class_eval <<-eof
+  def to_uri
+    self
+  end
+eof
+
 class String
   def to_uri
     Addressable::URI.parse(self)
