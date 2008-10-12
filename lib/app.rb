@@ -34,6 +34,11 @@ get '/:collection' do
   store.find_collection(params[:collection]).to_s
 end
 
+post '/:collection' do
+  status 201
+  store.create_entry(params[:collection], request.body.read).to_s
+end
+
 get '/:collection/:entry' do
   content_type :atom_entry
   store.find_entry(params[:collection], params[:entry]).to_s

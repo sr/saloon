@@ -65,6 +65,43 @@ describe 'App' do
     end
   end
 
+  describe 'POST /:collection' do
+    def do_post
+      post_it '/articles', @entry.to_s, :content_type => 'application/atom+xml;type=entry'
+    end
+
+    setup do
+      @entry = Atom::Entry.new(:title => 'foo', :content => 'bar')
+      @store.stubs(:create_entry).returns(@entry)
+    end
+
+    it 'is created' do
+      do_post
+      status.should.equal 201
+    end
+
+    it 'creates the entry' do
+      @store.expects(:create_entry).with('articles', @entry.to_s)
+      do_post
+    end
+
+    it 'returns the atom entry' do
+      do_post
+      body.should.equal @entry.to_s
+    end
+
+    describe 'When the collection is not found' do
+      setup do
+        @store.stubs(:create_entry).raises(CollectionNotFound)
+      end
+
+      it 'is not found' do
+        post_it '/articles', @entry.to_s, :content_type => 'application/atom+xml;type=entry'
+        should.be.not_found
+      end
+    end
+  end
+
   describe 'GET /:collection/:entry' do
     def do_get
       get_it '/articles/my_entry'
