@@ -245,6 +245,14 @@ describe 'Store' do
       do_create
     end
 
+    it 'sets the entry id using the edit url' do
+      hash = {}
+      @entry.stubs(:to_h).returns(hash)
+      @entry.expects(:edit_url).returns('entry edit url')
+      do_create
+      hash[:id].should.equal 'entry edit url'
+    end
+
     it 'sets the document id' do
       hash = {}
       @database.stubs(:save).returns('id' => 1234)

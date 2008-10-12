@@ -13,7 +13,7 @@ module Atom
   end
 
   class Entry
-    Elements = %w(title summary content published edited updated links).freeze
+    Elements = %w(title id summary content published edited updated links).freeze
 
     def to_h
       Elements.inject({}) do |hash, element|

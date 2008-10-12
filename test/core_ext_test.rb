@@ -10,6 +10,7 @@ end
 describe 'Hash#to_atom_entry' do
   setup do
     @hash = { :title => 'Atom-Powered Robots Run Amok',
+      :id         => 'http://foo.org/bar',
       :summary    => 'Some text.',
       :content    => 'Even more text...',
       :published  => Time.now,
@@ -29,6 +30,7 @@ describe 'Hash#to_atom_entry' do
   end
 
   %w(title
+  id
   summary
   content
   published
@@ -67,13 +69,15 @@ end
 
 describe 'Atom::Entry#to_h' do
   setup do
-    @entry = Atom::Entry.new(:title => 'foo', :summary => 'bar', :content => 'spam')
+    @entry = Atom::Entry.new(:title => 'foo', :summary => 'bar', :content => 'spam',
+      :id => 'http://foo.org/my_entry')
     @entry.updated! && @entry.edited! && @entry.published!
     @entry.edit_url = 'http://example.org/edit/foo'
     @entry.links.new(:rel => 'self', :href => 'http://example.org')
   end
 
   %w(title
+  id
   summary
   content
   published
