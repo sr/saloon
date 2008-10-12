@@ -39,6 +39,7 @@ class Store
     entry.edit_url = collection.base.to_uri.join(doc['id']).to_s
     database.save(entry.to_h.update(:_rev => doc['rev'], :_id => doc['id'],
       :type => 'entry', :collection => collection_id))
+    entry
   end
 
   def update_entry(collection, entry, new_entry)

@@ -281,6 +281,10 @@ describe 'Store' do
       @database.expects(:save).with('foo')
       do_create
     end
+
+    it 'returns the entry' do
+      do_create.should.equal @entry
+    end
   end
 
   describe 'When updating an entry' do
