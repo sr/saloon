@@ -32,12 +32,13 @@ class Store
   end
 
   def create_entry(collection_id, entry)
-    collection = get_collection!(collection_id).to_atom_feed
+    collection = get_collection!(collection_id)['value'].to_atom_feed
     entry = Atom::Entry.parse(entry)
     entry.published! && entry.updated! && entry.edited!
-    doc_id = database.save(entry.to_h.merge!(:type => 'entry', :collection => collection_id))['id']
-    entry.edit_url = collection.base.to_uri.join(doc_id).to_s
-    database.save(entry.to_h.update('_id' => doc_id))
+    doc = database.save(entry.to_h)
+    entry.edit_url = collection.base.to_uri.join(doc['id']).to_s
+    database.save(entry.to_h.update(:_rev => doc['rev'], :_id => doc['id'],
+      :type => 'entry', :collection => collection_id))
   end
 
   def update_entry(collection, entry, new_entry)
@@ -50,7 +51,7 @@ class Store
 
   protected
     def get_collection!(collection)
-      get('collection/all', collection).to_atom_feed || raise(CollectionNotFound)
+      get('collection/all', collection) || raise(CollectionNotFound)
     end
 
     def get_entry!(collection, entry)

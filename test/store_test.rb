@@ -193,7 +193,7 @@ describe 'Store' do
     setup do
       @collection = stub('some collection', :base => 'http://foo.org/my_coll/')
       @collection.stubs(:to_atom_feed).returns(@collection)
-      @store.stubs(:get_collection!).returns(@collection)
+      @store.stubs(:get_collection!).returns('value' => @collection)
       @hash = {:title => 'foo', :content => 'bar'}
       @entry = Atom::Entry.new(@hash)
       @entry.stubs(:to_h).returns(@hash)
@@ -203,7 +203,14 @@ describe 'Store' do
 
     it 'gets the collection' do
       @store.expects(:get_collection!).with('my_collection').
-        returns(@collection)
+        returns('value' => @collection)
+      do_create
+    end
+
+    it 'coerces the found collection to an Atom::Feed' do
+      result = {'value' => @collection}
+      @store.stubs(:get_collection!).returns(result)
+      result['value'].expects(:to_atom_feed).returns(@collection)
       do_create
     end
 
@@ -227,34 +234,51 @@ describe 'Store' do
       do_create
     end
 
-    it 'coerces the parsed entry to an hash' do
-      @entry.expects(:to_h).returns(@hash)
+    it 'coerces the parsed entry to an hash and saves it' do
+      @entry.expects(:to_h).returns('hash-ish entry').returns(@hash)
+      @database.expects(:save).with('hash-ish entry').returns('id' => 1234, 'rev' => 3456)
       do_create
     end
 
-    it 'sets the type of the document to "entry"' do
-      do_create
-      @hash[:type].should.equal 'entry'
-    end
-
-    it 'sets the collection to which the entry belongs' do
-      do_create
-      @hash[:collection].should.equal 'my_collection'
-    end
-
-    it 'saves the hash to the database' do
-      @database.expects(:save).with(@hash).returns('id' => 1234)
-      do_create
-    end
-
-    it 'sets the entry edit_url using the returned id' do
+    it 'sets the entry edit_url using the returned id for the saved entry' do
       @entry.expects(:edit_url=).with('http://foo.org/my_coll/1234')
       do_create
     end
 
-    it 'updated the just-saved entry with the updated edit link' do
-      @database.expects(:save).with(@hash.update('_id' => 1234,
-        :links => [{:rel => 'edit', :href => 'http://foo.org/my_coll/1234'}])).returns({})
+    it 'sets the document id' do
+      hash = {}
+      @database.stubs(:save).returns('id' => 1234)
+      @entry.stubs(:to_h).returns(hash)
+      do_create
+      hash[:_id].should.equal 1234
+    end
+
+    it 'sets the document revision' do
+      hash = {}
+      @database.stubs(:save).returns('rev' => 3455)
+      @entry.stubs(:to_h).returns(hash)
+      do_create
+      hash[:_rev].should.equal 3455
+    end
+
+    it 'sets the type of the document to "entry"' do
+      hash = {}
+      @entry.stubs(:to_h).returns(hash)
+      do_create
+      hash[:type].should.equal 'entry'
+    end
+
+    it 'sets the collection to which the entry belongs' do
+      hash = {}
+      @entry.stubs(:to_h).returns(hash)
+      do_create
+      hash[:collection].should.equal 'my_collection'
+    end
+
+    it 'saves the hash to the database' do
+      hash = stub('final hash', :update => 'foo')
+      @entry.stubs(:to_h).returns({}, hash)
+      @database.expects(:save).with('foo')
       do_create
     end
   end
