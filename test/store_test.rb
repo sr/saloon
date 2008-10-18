@@ -30,7 +30,7 @@ describe 'Store' do
     setup do
       Store.class_eval do
         public :server, :database
-        public :get_collection!, :get_entry!, :get
+        public :get_collection, :get_entry, :get
         public :atom_entries_from, :atom_collection_from
       end
 
@@ -45,9 +45,9 @@ describe 'Store' do
 
     specify '#database returns a new CouchRest::Database object' do
       Store.class_eval { public :database }
-      store = Store.new('foo')
-      store.server.expects(:database).with('foo')
-      store.database
+      store = Store.new(TestDatabase)
+      store.database.should.be.an.instance_of(CouchRest::Database)
+      store.database.name.should.equal TestDatabase
     end
 
     describe '#get' do
@@ -68,32 +68,52 @@ describe 'Store' do
       end
     end
 
-    describe '#get_entry!' do
-      it 'gets the view "entry/by_collection_and_entry' do
-        @store.expects(:get).with('entry/by_collection_and_entry',
-          ['my_collection', 'my_entry']).returns('something')
-        @store.get_entry!('my_collection', 'my_entry')
+    describe '#get_entry' do
+      setup do
+        @entry = {:title => 'foo', :content => 'bar'}
+        @row = {'id' => 'my_entry', 'value' => @entry}
+        @entry.stubs(:to_atom_entry).returns(Atom::Entry.new)
+        @store.stubs(:get).returns(@row)
       end
 
-      it 'raises EntryNotFound if no entry was found' do
+      it 'gets the view "entry/by_collection_and_entry' do
+        @store.expects(:get).with('entry/by_collection_and_entry',
+          ['my_collection', 'my_entry']).returns(@row)
+        @store.get_entry('my_collection', 'my_entry')
+      end
+
+      it 'coerces the entry to an Atom::Entry and returns it' do
+        @entry.expects(:to_atom_entry).returns('some entry')
+        @store.get_entry('my_collection', 'my_entry').should.equal 'some entry'
+      end
+
+      it 'returns nil if no entry was found' do
         @store.stubs(:get).returns(nil)
-        lambda do
-          @store.get_entry!('my_collection', 'my_entry')
-        end.should.raise EntryNotFound
+        @store.get_entry('my_collection', 'my_entry').should.be.nil
       end
     end
 
-    describe '#get_collection!' do
-      it 'gets the view "collection/all"' do
-        @store.expects(:get).with('collection/all', 'my_collection').returns('smthng')
-        @store.get_collection!('my_collection')
+    describe '#get_collection' do
+      setup do
+        @collection = {:title => 'foo', :base => 'http://foo.org/bar'}
+        @row = {'id' => 'my_collection', 'value' => @collection}
+        @collection.stubs(:to_atom_feed).returns(Atom::Feed.new)
+        @store.stubs(:get).returns(@row)
       end
 
-      it 'raises CollectionNotFound if no collection was found' do
+      it 'gets the view "collection/all"' do
+        @store.expects(:get).with('collection/all', 'my_collection').returns(@row)
+        @store.get_collection('my_collection')
+      end
+
+      it 'coerces the collection an Atom::Feed an returns it' do
+        @collection.expects(:to_atom_feed).returns('some feed')
+        @store.get_collection('my_collection').should.equal 'some feed'
+      end
+
+      it 'returns nil if no entry was found' do
         @store.stubs(:get).returns(nil)
-        lambda do
-          @store.get_collection!('my_collection')
-        end.should.raise CollectionNotFound
+        @store.get_collection('my_collection').should.be.nil
       end
     end
 
@@ -151,16 +171,16 @@ describe 'Store' do
       do_find
     end
 
-    it 'raises CollectionNotFound if no collection were found' do
-      @store.stubs(:atom_collection_from).returns(nil)
-      lambda { do_find }.should.raise CollectionNotFound
-    end
-
     it 'returns an Atom::Feed with the entries' do
       do_find.should.be.an.instance_of(Atom::Feed)
       do_find.entries.length.should.equal 2
       do_find.entries.first.title.to_s.should.equal 'Entry 1'
       do_find.entries.last.title.to_s.should.equal 'Entry 2'
+    end
+
+    it 'raises CollectionNotFound if no collection were found' do
+      @store.stubs(:atom_collection_from).returns(nil)
+      lambda { do_find }.should.raise CollectionNotFound
     end
   end
 
@@ -170,18 +190,17 @@ describe 'Store' do
     end
 
     setup do
-      @entry = stub('some entry', :to_atom_entry => Atom::Entry.new)
-      @store.stubs(:get_entry!).returns(@entry)
+      @store.stubs(:get_entry).returns(Atom::Entry.new)
     end
 
     it 'finds the entry' do
-      @store.expects(:get_entry!).with('my_collection', 'my_entry').returns(@entry)
+      @store.expects(:get_entry).with('my_collection', 'my_entry').returns(Atom::Entry.new)
       do_find
     end
 
-    it 'coerces the document to an Atom::Entry and returns it' do
-      @entry.expects(:to_atom_entry).returns('an atom entry')
-      do_find.should.equal 'an atom entry'
+    it 'raises EntryNotFound if no entry was found' do
+      @store.stubs(:get_entry).returns(nil)
+      lambda { do_find }.should.raise(EntryNotFound)
     end
   end
 
@@ -193,7 +212,7 @@ describe 'Store' do
     setup do
       @collection = stub('some collection', :base => 'http://foo.org/my_coll/')
       @collection.stubs(:to_atom_feed).returns(@collection)
-      @store.stubs(:get_collection!).returns('value' => @collection)
+      @store.stubs(:get_collection).returns('value' => @collection)
       @hash = {:title => 'foo', :content => 'bar'}
       @entry = Atom::Entry.new(@hash)
       @entry.stubs(:to_h).returns(@hash)
@@ -201,15 +220,22 @@ describe 'Store' do
       @database.stubs(:save).returns('id' => 1234)
     end
 
+
+
     it 'gets the collection' do
-      @store.expects(:get_collection!).with('my_collection').
+      @store.expects(:get_collection).with('my_collection').
         returns('value' => @collection)
       do_create
     end
 
+    it 'raises CollectionNotFound if no collection was found' do
+      @store.stubs(:get_collection).returns(nil)
+      lambda { do_create }.should.raise(CollectionNotFound)
+    end
+
     it 'coerces the found collection to an Atom::Feed' do
       result = {'value' => @collection}
-      @store.stubs(:get_collection!).returns(result)
+      @store.stubs(:get_collection).returns(result)
       result['value'].expects(:to_atom_feed).returns(@collection)
       do_create
     end

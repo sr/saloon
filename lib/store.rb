@@ -28,11 +28,12 @@ class Store
   end
 
   def find_entry(collection, entry)
-    get_entry!(collection, entry).to_atom_entry
+    get_entry(collection, entry) || raise(EntryNotFound)
   end
 
   def create_entry(collection_id, entry)
-    collection = get_collection!(collection_id)['value'].to_atom_feed
+    raise CollectionNotFound unless collection = get_collection(collection_id)
+    collection = collection['value'].to_atom_feed
     entry = Atom::Entry.parse(entry)
     entry.published! && entry.updated! && entry.edited!
     doc = database.save(entry.to_h)
@@ -51,13 +52,14 @@ class Store
   end
 
   protected
-    def get_collection!(collection)
-      get('collection/all', collection) || raise(CollectionNotFound)
+    def get_collection(collection)
+      collection = get('collection/all', collection)
+      collection ? collection['value'].to_atom_feed : nil
     end
 
-    def get_entry!(collection, entry)
-      get('entry/by_collection_and_entry', [collection, entry]) ||
-        raise(EntryNotFound)
+    def get_entry(collection, entry)
+      entry = get('entry/by_collection_and_entry', [collection, entry])
+      entry ? entry['value'].to_atom_entry : entry
     end
 
     def get(view, key)
