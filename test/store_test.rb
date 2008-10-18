@@ -210,34 +210,24 @@ describe 'Store' do
     end
 
     setup do
-      @collection = stub('some collection', :base => 'http://foo.org/my_coll/')
-      @collection.stubs(:to_atom_feed).returns(@collection)
-      @store.stubs(:get_collection).returns('value' => @collection)
-      @hash = {:title => 'foo', :content => 'bar'}
-      @entry = Atom::Entry.new(@hash)
-      @entry.stubs(:to_h).returns(@hash)
+      @collection = stub('some collection', :base => 'http://foo.org/my_collection/')
+      @entry = Atom::Entry.new(:title => 'foo', :content => 'bar')
+      @hash  = {:title => 'foo', :content => 'bar'}
       Atom::Entry.stubs(:parse).returns(@entry)
+      @entry.stubs(:to_h).returns(@hash)
+      @store.stubs(:get_collection).returns(@collection)
       @database.stubs(:save).returns('id' => 1234)
     end
 
-
-
     it 'gets the collection' do
       @store.expects(:get_collection).with('my_collection').
-        returns('value' => @collection)
+        returns(@collection)
       do_create
     end
 
     it 'raises CollectionNotFound if no collection was found' do
       @store.stubs(:get_collection).returns(nil)
       lambda { do_create }.should.raise(CollectionNotFound)
-    end
-
-    it 'coerces the found collection to an Atom::Feed' do
-      result = {'value' => @collection}
-      @store.stubs(:get_collection).returns(result)
-      result['value'].expects(:to_atom_feed).returns(@collection)
-      do_create
     end
 
     it 'parses the entry' do
@@ -261,13 +251,14 @@ describe 'Store' do
     end
 
     it 'coerces the parsed entry to an hash and saves it' do
-      @entry.expects(:to_h).returns('hash-ish entry').returns(@hash)
-      @database.expects(:save).with('hash-ish entry').returns('id' => 1234, 'rev' => 3456)
+      @entry.expects(:to_h).returns(@hash)
+      @database.expects(:save).with(@hash).returns('id' => 1234, 'rev' => 3456)
       do_create
     end
 
     it 'sets the entry edit_url using the returned id for the saved entry' do
-      @entry.expects(:edit_url=).with('http://foo.org/my_coll/1234')
+      @collection.expects(:base).returns('http://foo.org/my_collection/')
+      @entry.expects(:edit_url=).with('http://foo.org/my_collection/1234')
       do_create
     end
 
@@ -327,17 +318,9 @@ describe 'Store' do
     end
 
     setup do
-      @new_entry_h = {:title => 'ghostface', :content => 'killah'}
-      @new_entry = Atom::Entry.new(@new_entry_h)
-      @new_entry.stubs(:to_h).returns(@new_entry_h)
-
-      @hash = {:title => 'foo', :content => 'bar'}
-      @entry = Atom::Entry.new(@hash)
-      @entry.stubs(:to_h).returns(@hash)
-      @hash.stubs(:to_atom_entry).returns(@entry)
-
+      @new_entry = Atom::Entry.new(:title => 'foo', :content => 'bar')
       Atom::Entry.stubs(:parse).returns(@new_entry)
-      @store.stubs(:get_entry!).returns(@hash)
+      @store.stubs(:get_entry).returns(Atom::Entry.new)
     end
 
     it 'parses the new entry' do
@@ -346,13 +329,14 @@ describe 'Store' do
     end
 
     it 'gets the entry to update' do
-      @store.expects(:get_entry!).with('my_collection', 'my_entry').returns(@hash)
+      @store.expects(:get_entry).with('my_collection', 'my_entry').
+        returns(Atom::Entry.new)
       do_update
     end
 
-    it 'coerces the entry to update to Atom::Entry' do
-      @hash.expects(:to_atom_entry).returns(@entry)
-      do_update
+    it 'raises EntryNotFound if no entry was found' do
+      @store.stubs(:get_entry).returns(nil)
+      lambda { do_update }.should.raise(EntryNotFound)
     end
 
     it 'marks the new entry as edited' do
@@ -365,8 +349,9 @@ describe 'Store' do
       do_update
     end
 
-    it 'saves the updated entry' do
-      @database.expects(:save).with(@new_entry_h)
+    it 'coerces to updated entry to an hash and saves it' do
+      @new_entry.expects(:to_h).returns('entry as an hash')
+      @database.expects(:save).with('entry as an hash')
       do_update
     end
   end

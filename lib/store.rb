@@ -33,21 +33,23 @@ class Store
 
   def create_entry(collection_id, entry)
     raise CollectionNotFound unless collection = get_collection(collection_id)
-    collection = collection['value'].to_atom_feed
     entry = Atom::Entry.parse(entry)
     entry.published! && entry.updated! && entry.edited!
     doc = database.save(entry.to_h)
     entry.edit_url = collection.base.to_uri.join(doc['id']).to_s
-    database.save(entry.to_h.update(:_rev => doc['rev'], :_id => doc['id'],
-      :type => 'entry', :collection => collection_id, :id => entry.edit_url))
+    database.save(entry.to_h.update(:_id => doc['id'],
+      :_rev => doc['rev'],
+      :type => 'entry',
+      :id   => entry.edit_url,
+      :collection => collection_id
+    ))
     entry
   end
 
   def update_entry(collection, entry, new_entry)
-    entry = get_entry!(collection, entry).to_atom_entry
+    raise EntryNotFound unless entry = get_entry(collection, entry)
     new_entry = Atom::Entry.parse(new_entry)
-    new_entry.updated!
-    new_entry.edited!
+    new_entry.updated! && new_entry.edited!
     database.save(new_entry.to_h)
   end
 
