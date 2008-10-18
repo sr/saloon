@@ -27,6 +27,7 @@ end
 
 get '/' do
   content_type :atom_service
+  store.service.to_s
 end
 
 get '/:collection' do

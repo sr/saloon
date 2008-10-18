@@ -2,8 +2,9 @@ $:.unshift File.dirname(__FILE__) + '/../vendor/couchrest/lib'
 
 require 'rubygems'
 require 'couch_rest'
-require 'atom/entry'
+require 'atom/service'
 require 'atom/collection'
+require 'atom/entry'
 
 require File.dirname(__FILE__) + '/core_ext'
 
@@ -15,6 +16,18 @@ class Store
 
   def initialize(db_name)
     @db_name = db_name
+  end
+
+  def service
+    service = Atom::Service.new
+    workspace = service.workspaces.new
+    database.view('collection/all')['rows'].each do |row|
+      collection = Atom::Collection.new(row['value']['base'])
+      collection.title = row['value']['title']
+      collection.accepts = 'application/atom+xml;type=entry'
+      workspace.collections << collection
+    end
+    service
   end
 
   def find_collection(collection)
@@ -36,7 +49,7 @@ class Store
     entry = Atom::Entry.parse(entry)
     entry.published! && entry.updated! && entry.edited!
     doc = database.save(entry.to_h)
-    entry.edit_url = collection.base.to_uri.join(doc['id']).to_s
+    entry.edit_url = (collection.base+'/').to_uri.join(doc['id']).to_s
     database.save(entry.to_h.update(:_id => doc['id'],
       :_rev => doc['rev'],
       :type => 'entry',

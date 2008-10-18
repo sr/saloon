@@ -1,4 +1,5 @@
-collection = Atom::Collection.new('http://0.0.0.0:1234/my_collection_0')
+service = Atom::Service.new('http://0.0.0.0:1234/')
+collection = service.workspaces.first.collections.first
 collection.feed.update!
 count = collection.feed.entries.length
 entry = Atom::Entry.new(:title => 'foo', :content => 'bar')

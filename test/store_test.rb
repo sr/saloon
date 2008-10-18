@@ -145,6 +145,48 @@ describe 'Store' do
     end
   end
 
+  describe 'When getting service document' do
+    setup do
+      @rows = [{'id' => 'my_collection', 'value' => {'title' => 'foo',
+        'base' => 'http://example.org/my_collection'}}]
+      @database.stubs(:view).returns('rows' => @rows)
+      @workspace  = Atom::Workspace.new
+      @workspaces = stub('atom workspaces', :new => @workspace)
+      @service = Atom::Service.new
+      @service.stubs(:workspaces).returns(@workspaces)
+      Atom::Service.stubs(:new).returns(@service)
+    end
+
+    it 'creates a new service document' do
+      Atom::Service.expects(:new).returns(Atom::Service.new)
+      @store.service
+    end
+
+    it 'creates a new workspace' do
+      @service.workspaces.expects(:new).returns(Atom::Workspace.new)
+      @store.service
+    end
+
+    it 'retrieves collections using the view collection/all' do
+      @database.expects(:view).with('collection/all').returns('rows' => [])
+      @store.service
+    end
+
+    it 'creates a collection and appends it to the workspace' do
+      collection = Atom::Collection.new
+      Atom::Collection.expects(:new).with('http://example.org/my_collection').
+        returns(collection)
+      collection.expects(:title=).with('foo')
+      collection.expects(:accepts=).with('application/atom+xml;type=entry')
+      @workspace.collections.expects(:<<).with(collection)
+      @store.service
+    end
+
+    it 'returns the service document' do
+      @store.service.should.be.an.instance_of Atom::Service
+    end
+  end
+
   describe 'When finding a collection' do
     def do_find
       @store.find_collection('my_collection')

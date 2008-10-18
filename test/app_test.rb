@@ -12,6 +12,11 @@ describe 'App' do
       get_it '/'
     end
 
+    setup do
+      @service = stub('an Atom::Service', :to_s => 'xml')
+      @store.stubs(:service).returns(@service)
+    end
+
     it 'is successful' do
       do_get
       should.be.ok
@@ -20,6 +25,17 @@ describe 'App' do
     it 'is application/atomsvc+xml' do
       do_get
       headers['Content-Type'].should.equal 'application/atomsvc+xml'
+    end
+
+    it 'gets the service document' do
+      @store.expects(:service).returns(@service)
+      do_get
+    end
+
+    it 'returns the atom representation of the service document' do
+      @service.expects(:to_s).returns('some xml representing the service doc')
+      do_get
+      body.should.equal 'some xml representing the service doc'
     end
   end
 
