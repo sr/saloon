@@ -15,6 +15,10 @@ helpers do
   def store
     @store ||= Store.new(DatabaseName)
   end
+
+  def location(uri)
+    header['Location'] = uri.to_s
+  end
 end
 
 error CollectionNotFound do
@@ -36,8 +40,10 @@ get '/:collection' do
 end
 
 post '/:collection' do
+  entry = store.create_entry(params[:collection], request.body.read)
   status 201
-  store.create_entry(params[:collection], request.body.read).to_s
+  location entry.edit_url
+  entry.to_s
 end
 
 get '/:collection/:entry' do

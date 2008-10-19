@@ -87,7 +87,8 @@ describe 'App' do
     end
 
     setup do
-      @entry = Atom::Entry.new(:title => 'foo', :content => 'bar')
+      @entry = Atom::Entry.new(:title => 'foo', :content => 'bar',
+        :edit_url => 'http://example.org/my_collection/my_entry')
       @store.stubs(:create_entry).returns(@entry)
     end
 
@@ -99,6 +100,11 @@ describe 'App' do
     it 'creates the entry' do
       @store.expects(:create_entry).with('articles', @entry.to_s)
       do_post
+    end
+
+    it "sets the Location header to the entry's edit url" do
+      do_post
+      headers['Location'].should.equal 'http://example.org/my_collection/my_entry'
     end
 
     it 'returns the atom entry' do
