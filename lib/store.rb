@@ -77,7 +77,8 @@ class Store
     database.save new_entry.to_h.update(
       '_id'        => entry['_id'],
       '_rev'       => entry['_rev'],
-      'collection' => entry['collection']
+      'collection' => entry['collection'],
+      'type'       => 'entry'
     )
   end
 

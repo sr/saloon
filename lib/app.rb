@@ -50,3 +50,9 @@ get '/:collection/:entry' do
   content_type :atom_entry
   store.find_entry(params[:collection], params[:entry]).to_s
 end
+
+put '/:collection/:entry' do
+  content_type :atom_entry
+  store.update_entry(params[:collection], params[:entry], request.body.read)
+  ''
+end

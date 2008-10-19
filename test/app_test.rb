@@ -165,4 +165,42 @@ describe 'App' do
       end
     end
   end
+
+  describe 'PUT /:collection/:entry' do
+    def do_put
+      put_it '/articles/my_entry', @entry.to_s, :content_type => 'application/atom+xml;type=entry'
+    end
+
+    setup do
+      @entry = stub('an Atom::Entry', :to_s => 'hi i am an atom entry')
+      @store.stubs(:update_entry).returns(@entry)
+    end
+
+    it 'is successful' do
+      do_put
+      should.be.ok
+    end
+
+    it 'is application/atom+xml;type=entry' do
+      do_put
+      headers['Content-Type'].should.equal 'application/atom+xml;type=entry'
+    end
+
+    it 'updates the entry' do
+      @store.expects(:update_entry).with('articles', 'my_entry', @entry.to_s)
+      do_put
+    end
+
+    it 'is not found if the collection do not exists' do
+      @store.stubs(:update_entry).raises(CollectionNotFound)
+      do_put
+      should.be.not_found
+    end
+
+    it 'is not found if the entry do not exists' do
+      @store.stubs(:update_entry).raises(EntryNotFound)
+      do_put
+      should.be.not_found
+    end
+  end
 end
