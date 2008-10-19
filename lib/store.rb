@@ -49,7 +49,8 @@ class Store
     entry = Atom::Entry.parse(entry)
     entry.published! && entry.updated! && entry.edited!
     doc = database.save(entry.to_h)
-    entry.edit_url = (collection.base+'/').to_uri.join(doc['id']).to_s
+    # TODO: remove that hack
+    entry.edit_url = (collection.base + '/').to_uri.join(doc['id']).to_s
     database.save(entry.to_h.update(:_id => doc['id'],
       :_rev => doc['rev'],
       :type => 'entry',

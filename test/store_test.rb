@@ -252,7 +252,7 @@ describe 'Store' do
     end
 
     setup do
-      @collection = stub('some collection', :base => 'http://foo.org/my_collection/')
+      @collection = stub('some collection', :base => 'http://foo.org/my_collection')
       @entry = Atom::Entry.new(:title => 'foo', :content => 'bar')
       @hash  = {:title => 'foo', :content => 'bar'}
       Atom::Entry.stubs(:parse).returns(@entry)
@@ -299,7 +299,7 @@ describe 'Store' do
     end
 
     it 'sets the entry edit_url using the returned id for the saved entry' do
-      @collection.expects(:base).returns('http://foo.org/my_collection/')
+      @collection.expects(:base).returns('http://foo.org/my_collection')
       @entry.expects(:edit_url=).with('http://foo.org/my_collection/1234')
       do_create
     end
