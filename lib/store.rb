@@ -47,19 +47,24 @@ class Store
     entry.to_atom_entry
   end
 
-  def create_entry(collection_id, entry)
-    raise CollectionNotFound unless collection = get_collection(collection_id)
+  def create_entry(collection, entry)
+    collection = get('collection/all', collection) or raise CollectionNotFound
+
     entry = Atom::Entry.parse(entry)
-    entry.published! && entry.updated! && entry.edited!
-    doc = database.save(entry.to_h)
+    entry.published!
+    entry.updated!
+    entry.edited!
+
+    document = database.save(entry.to_h)
     # TODO: remove that hack
-    entry.edit_url = (collection.base + '/').to_uri.join(doc['id']).to_s
-    database.save(entry.to_h.update(:_id => doc['id'],
-      :_rev => doc['rev'],
+    entry.edit_url = (collection['value']['base'] + '/').to_uri.join(document['id']).to_s
+    database.save entry.to_h.update(
+      :_id => document['id'],
+      :_rev => document['rev'],
       :type => 'entry',
       :id   => entry.edit_url,
-      :collection => collection_id
-    ))
+      :collection => collection['id']
+    )
     entry
   end
 
@@ -81,11 +86,6 @@ class Store
     def get(view, key)
       response = database.view(view, :key => key, :count => 1)
       response['rows'].empty? ? nil : response['rows'].first
-    end
-
-    def get_collection(collection)
-      collection = get('collection/all', collection)
-      collection ? collection['value'].to_atom_feed : nil
     end
 
     def get_entry(collection, entry)

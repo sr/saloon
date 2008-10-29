@@ -30,7 +30,7 @@ describe 'Store' do
     setup do
       Store.class_eval do
         public :server, :database
-        public :get_collection, :get_entry, :get
+        public :get_entry, :get
         public :atom_entries_from, :atom_collection_from
       end
 
@@ -85,30 +85,6 @@ describe 'Store' do
       it 'returns nil if no entry was found' do
         @store.stubs(:get).returns(nil)
         @store.get_entry('my_collection', 'my_entry').should.be.nil
-      end
-    end
-
-    describe '#get_collection' do
-      setup do
-        @collection = {:title => 'foo', :base => 'http://foo.org/bar'}
-        @row = {'id' => 'my_collection', 'value' => @collection}
-        @collection.stubs(:to_atom_feed).returns(Atom::Feed.new)
-        @store.stubs(:get).returns(@row)
-      end
-
-      it 'gets the view "collection/all"' do
-        @store.expects(:get).with('collection/all', 'my_collection').returns(@row)
-        @store.get_collection('my_collection')
-      end
-
-      it 'coerces the collection an Atom::Feed an returns it' do
-        @collection.expects(:to_atom_feed).returns('some feed')
-        @store.get_collection('my_collection').should.equal 'some feed'
-      end
-
-      it 'returns nil if no entry was found' do
-        @store.stubs(:get).returns(nil)
-        @store.get_collection('my_collection').should.be.nil
       end
     end
 
@@ -255,23 +231,24 @@ describe 'Store' do
     end
 
     setup do
-      @collection = stub('some collection', :base => 'http://foo.org/my_collection')
+      @collection = { 'id'    => 'my_collection',
+                      'value' => { 'base' => 'http://foo.org/my_collection' } }
       @entry = Atom::Entry.new(:title => 'foo', :content => 'bar')
       @hash  = {:title => 'foo', :content => 'bar'}
       Atom::Entry.stubs(:parse).returns(@entry)
       @entry.stubs(:to_h).returns(@hash)
-      @store.stubs(:get_collection).returns(@collection)
+      @store.stubs(:get).returns(@collection)
       @database.stubs(:save).returns('id' => 1234)
     end
 
     it 'gets the collection' do
-      @store.expects(:get_collection).with('my_collection').
+      @store.expects(:get).with('collection/all', 'my_collection').
         returns(@collection)
       do_create
     end
 
     it 'raises CollectionNotFound if no collection was found' do
-      @store.stubs(:get_collection).returns(nil)
+      @store.stubs(:get).returns(nil)
       lambda { do_create }.should.raise(CollectionNotFound)
     end
 
@@ -302,7 +279,7 @@ describe 'Store' do
     end
 
     it 'sets the entry edit_url using the returned id for the saved entry' do
-      @collection.expects(:base).returns('http://foo.org/my_collection')
+      @collection['value'].expects(:[]).with('base').returns('http://foo.org/my_collection')
       @entry.expects(:edit_url=).with('http://foo.org/my_collection/1234')
       do_create
     end
