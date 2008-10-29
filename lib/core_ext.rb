@@ -35,18 +35,6 @@ module Atom
   end
 end
 
-Addressable::URI.class_eval <<-eof
-  def to_uri
-    self
-  end
-eof
-
-class String
-  def to_uri
-    Addressable::URI.parse(self)
-  end
-end
-
 class Hash
   def stringify_keys
     inject({}) do |hash, (key, value)|
@@ -79,5 +67,18 @@ class Hash
 
       entry
     end
+  end
+end
+
+class String
+  def to_uri
+    Addressable::URI.parse(self)
+  end
+end
+
+# otherwise, atom-tools blows up
+class Addressable::URI
+  def to_uri
+    self
   end
 end
