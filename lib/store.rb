@@ -67,6 +67,12 @@ class Store
     database.save(new_entry.to_h)
   end
 
+  def delete_entry(collection, entry)
+    entry = get('entry/by_collection_and_entry', [collection, entry])
+    raise EntryNotFound unless entry
+    database.delete(entry)
+  end
+
   protected
     def get_collection(collection)
       collection = get('collection/all', collection)

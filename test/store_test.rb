@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/../lib/store'
 
 describe 'Store' do
   setup do
-    @database = stub('couchdb database', :view => '', :save => '')
+    @database = stub('couchdb database', :view => '', :save => '', :delete => '')
     @store = Store.new(TestDatabase)
     @store.stubs(:database).returns(@database)
     @rows = [
@@ -395,6 +395,32 @@ describe 'Store' do
       @new_entry.expects(:to_h).returns('entry as an hash')
       @database.expects(:save).with('entry as an hash')
       do_update
+    end
+  end
+
+  describe 'When deleting an entry' do
+    def do_delete
+      @store.delete_entry('my_collection', 'my_entry')
+    end
+
+    setup do
+      @store.stubs(:get).returns('entry document')
+    end
+
+    it 'gets the entry' do
+      @store.expects(:get).with('entry/by_collection_and_entry', ['my_collection', 'my_entry']).
+        returns('entry document')
+      do_delete
+    end
+
+    it 'raises EntryNotFound if no entry was found' do
+      @store.stubs(:get).returns(nil)
+      lambda { do_delete }.should.raise(EntryNotFound)
+    end
+
+    it 'deletes the document' do
+      @database.expects(:delete).with('entry document')
+      do_delete
     end
   end
 end
