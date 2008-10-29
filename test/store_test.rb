@@ -82,11 +82,6 @@ describe 'Store' do
         @store.get_entry('my_collection', 'my_entry')
       end
 
-      it 'coerces the entry to an Atom::Entry and returns it' do
-        @entry.expects(:to_atom_entry).returns('some entry')
-        @store.get_entry('my_collection', 'my_entry').should.equal 'some entry'
-      end
-
       it 'returns nil if no entry was found' do
         @store.stubs(:get).returns(nil)
         @store.get_entry('my_collection', 'my_entry').should.be.nil
@@ -232,11 +227,19 @@ describe 'Store' do
     end
 
     setup do
-      @store.stubs(:get_entry).returns(Atom::Entry.new)
+      @store.stubs(:get_entry).returns(:title => 'foo', :content => 'bar')
     end
 
-    it 'finds the entry' do
-      @store.expects(:get_entry).with('my_collection', 'my_entry').returns(Atom::Entry.new)
+    it 'gets the entry' do
+      @store.expects(:get_entry).with('my_collection', 'my_entry').
+        returns(:title => 'foo', :content => 'bar')
+      do_find
+    end
+
+    it 'coerces the document to an Atom::Entry' do
+      entry = stub('some entry')
+      @store.stubs(:get_entry).returns(entry)
+      entry.expects(:to_atom_entry)
       do_find
     end
 
@@ -362,7 +365,7 @@ describe 'Store' do
     setup do
       @new_entry = Atom::Entry.new(:title => 'foo', :content => 'bar')
       Atom::Entry.stubs(:parse).returns(@new_entry)
-      @store.stubs(:get_entry).returns(Atom::Entry.new)
+      @store.stubs(:get_entry).returns(:id => 'document id')
     end
 
     it 'parses the new entry' do
@@ -372,7 +375,7 @@ describe 'Store' do
 
     it 'gets the entry to update' do
       @store.expects(:get_entry).with('my_collection', 'my_entry').
-        returns(Atom::Entry.new)
+        returns(:id => 'document id')
       do_update
     end
 
@@ -404,17 +407,17 @@ describe 'Store' do
     end
 
     setup do
-      @store.stubs(:get).returns('entry document')
+      @store.stubs(:get_entry).returns('entry document')
     end
 
     it 'gets the entry' do
-      @store.expects(:get).with('entry/by_collection_and_entry', ['my_collection', 'my_entry']).
+      @store.expects(:get_entry).with('my_collection', 'my_entry').
         returns('entry document')
       do_delete
     end
 
     it 'raises EntryNotFound if no entry was found' do
-      @store.stubs(:get).returns(nil)
+      @store.stubs(:get_entry).returns(nil)
       lambda { do_delete }.should.raise(EntryNotFound)
     end
 

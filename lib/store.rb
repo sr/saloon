@@ -41,7 +41,8 @@ class Store
   end
 
   def find_entry(collection, entry)
-    get_entry(collection, entry) || raise(EntryNotFound)
+    entry = get_entry(collection, entry) or raise EntryNotFound
+    entry.to_atom_entry
   end
 
   def create_entry(collection_id, entry)
@@ -61,15 +62,16 @@ class Store
   end
 
   def update_entry(collection, entry, new_entry)
-    raise EntryNotFound unless entry = get_entry(collection, entry)
+    entry = get_entry(collection, entry) or raise EntryNotFound
     new_entry = Atom::Entry.parse(new_entry)
-    new_entry.updated! && new_entry.edited!
+    new_entry.id = entry['id']
+    new_entry.updated!
+    new_entry.edited!
     database.save(new_entry.to_h)
   end
 
   def delete_entry(collection, entry)
-    entry = get('entry/by_collection_and_entry', [collection, entry])
-    raise EntryNotFound unless entry
+    entry = get_entry(collection, entry) or raise EntryNotFound
     database.delete(entry)
   end
 
@@ -81,7 +83,7 @@ class Store
 
     def get_entry(collection, entry)
       entry = get('entry/by_collection_and_entry', [collection, entry])
-      entry ? entry['value'].to_atom_entry : entry
+      entry ? entry['value'] : nil
     end
 
     def get(view, key)
