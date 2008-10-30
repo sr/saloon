@@ -203,4 +203,27 @@ describe 'App' do
       should.be.not_found
     end
   end
+
+  describe 'DELETE /:collection/:entry' do
+    def do_delete
+      delete_it '/articles/my_entry'
+    end
+
+    it 'is success' do
+      @store.stubs(:delete_entry)
+      do_delete
+      should.be.ok
+    end
+
+    it 'deletes the entry' do
+      @store.expects(:delete_entry).with('articles', 'my_entry')
+      do_delete
+    end
+
+    it 'is not found if the entry do not exists' do
+      @store.stubs(:delete_entry).raises(EntryNotFound)
+      do_delete
+      should.be.not_found
+    end
+  end
 end

@@ -56,3 +56,8 @@ put '/:collection/:entry' do
   store.update_entry(params[:collection], params[:entry], request.body.read)
   ''
 end
+
+delete '/:collection/:entry' do
+  store.delete_entry(params[:collection], params[:entry])
+  ''
+end
