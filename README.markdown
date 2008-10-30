@@ -53,3 +53,9 @@ Written by Simon Rozet <simon@rozet.name>
     CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
     TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+[AtomPub]: http://bitworking.org/projects/atom/rfc5023.html
+[Sinatra]: http://github.com/bmizerany/sinatra
+[CouchDB]: http://couchdb.org
+[APE]: http://ape.rubyforge.org
+[report]: http://atonie.org/2008/saloon/report
