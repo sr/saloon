@@ -42,6 +42,7 @@ end
 post '/:collection' do
   entry = store.create_entry(params[:collection], request.body.read)
   status 201
+  content_type :atom_entry
   location entry.edit_url
   entry.to_s
 end

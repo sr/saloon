@@ -102,6 +102,11 @@ describe 'App' do
       do_post
     end
 
+    it 'is application/atom+xml;type=entry' do
+      do_post
+      headers['Content-Type'].should.equal 'application/atom+xml;type=entry'
+    end
+
     it "sets the Location header to the entry's edit url" do
       do_post
       headers['Location'].should.equal 'http://example.org/my_collection/my_entry'
