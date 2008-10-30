@@ -52,9 +52,10 @@ get '/:collection/:entry' do
 end
 
 put '/:collection/:entry' do
+  entry = store.update_entry(params[:collection], params[:entry], request.body.read)
   content_type :atom_entry
-  store.update_entry(params[:collection], params[:entry], request.body.read)
-  ''
+  location entry.edit_url
+  entry.to_s
 end
 
 delete '/:collection/:entry' do

@@ -72,6 +72,7 @@ class Store
     entry = get_entry(collection, entry) or raise EntryNotFound
     new_entry = Atom::Entry.parse(new_entry)
     new_entry.id = entry['id']
+    new_entry.edit_url = entry.to_atom_entry.edit_url
     new_entry.updated!
     new_entry.edited!
     database.save new_entry.to_h.update(
@@ -80,6 +81,7 @@ class Store
       'collection' => entry['collection'],
       'type'       => 'entry'
     )
+    new_entry
   end
 
   def delete_entry(collection, entry)

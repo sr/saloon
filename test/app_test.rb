@@ -172,7 +172,8 @@ describe 'App' do
     end
 
     setup do
-      @entry = stub('an Atom::Entry', :to_s => 'hi i am an atom entry')
+      @entry = stub('an Atom::Entry', :to_s => 'hi i am an atom entry',
+        :edit_url => 'http://example.org/my_collection/my_entry')
       @store.stubs(:update_entry).returns(@entry)
     end
 
@@ -187,8 +188,19 @@ describe 'App' do
     end
 
     it 'updates the entry' do
-      @store.expects(:update_entry).with('articles', 'my_entry', @entry.to_s)
+      @store.expects(:update_entry).with('articles', 'my_entry', @entry.to_s).
+        returns(@entry)
       do_put
+    end
+
+    it "sets the Location header to the entry's edit url" do
+      do_put
+      headers['Location'].should.equal 'http://example.org/my_collection/my_entry'
+    end
+
+    it 'returns the atom entry' do
+      do_put
+      body.should.equal 'hi i am an atom entry'
     end
 
     it 'is not found if the collection do not exists' do
@@ -225,5 +237,6 @@ describe 'App' do
       do_delete
       should.be.not_found
     end
+
   end
 end

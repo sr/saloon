@@ -392,6 +392,10 @@ describe 'Store' do
       @database.expects(:save)
       do_update
     end
+
+    it 'returns the updated entry' do
+      do_update.should.equal @new_entry
+    end
   end
 
   describe 'When deleting an entry' do
