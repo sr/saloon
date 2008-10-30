@@ -78,6 +78,7 @@ namespace :database do
                           :href => "http://0.0.0.0:1234/#{CollectionId}_#{i}/entry_#{i}"}],
           :title      => "Sample Entry #{i}",
           :updated    => Time.mktime(2008, 1, 1+i),
+          :edited     => Time.mktime(2008, 1, 1+i),
           :content    => "Content of the entry number #{i}.")
       end
     end
