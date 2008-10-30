@@ -14,11 +14,13 @@ describe 'Store' do
       { 'id' => 'my_entry',
         'key' => ['my_collection', 1],
         'value' => {'_id' => 'my_entry_2', 'type' => 'entry',
-                    'title' => 'Entry 1', 'content' => 'foobar'}},
+                    'title' => 'Entry 1', 'content' => 'foobar',
+                    'edited' => Time.now}},
       { 'id' => 'my_entry',
         'key' => ['my_collection', 1],
         'value' => {'_id' => 'my_entry_2', 'type' => 'entry',
-                    'title' => 'Entry 2', 'content' => 'foobar'}}
+                    'title' => 'Entry 2', 'content' => 'foobar',
+                    'edited' => Time.now}}
     ]
   end
 
@@ -165,6 +167,7 @@ describe 'Store' do
 
     setup do
       @database.stubs(:view).returns('rows' => @rows)
+      @entries = [Atom::Entry.new(:edited => Time.now)] * 2
     end
 
     it 'finds the collection using the view entry/by_collection' do
@@ -180,15 +183,22 @@ describe 'Store' do
     end
 
     it 'extracts the entries from the result set' do
-      @store.expects(:atom_entries_from).with(@rows).returns([Atom::Entry.new, Atom::Entry.new])
+      @store.expects(:atom_entries_from).with(@rows).returns(@entries)
       do_find
     end
 
-    it 'returns an Atom::Feed with the entries' do
+    it 'sorts entries by edited in reverse order' do
+      @entries.expects(:sort_by).returns(@entries)
+      @entries.expects(:reverse).returns(@entries)
+      @store.stubs(:atom_entries_from).returns(@entries)
+      do_find
+    end
+
+    it 'returns an Atom::Feed with the entries sorted by edited in reverse order' do
       do_find.should.be.an.instance_of(Atom::Feed)
       do_find.entries.length.should.equal 2
-      do_find.entries.first.title.to_s.should.equal 'Entry 1'
-      do_find.entries.last.title.to_s.should.equal 'Entry 2'
+      do_find.entries.first.title.to_s.should.equal 'Entry 2'
+      do_find.entries.last.title.to_s.should.equal 'Entry 1'
     end
 
     it 'raises CollectionNotFound if no collection were found' do

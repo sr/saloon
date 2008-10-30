@@ -34,7 +34,7 @@ class Store
     documents = database.view('entry/by_collection',
       :startkey => [collection, 0], :endkey => [collection, 1])['rows']
     collection = atom_collection_from(documents) or raise CollectionNotFound
-    entries    = atom_entries_from(documents)
+    entries    = atom_entries_from(documents).sort_by{ |e| e.edited }.reverse
 
     entries.inject(collection) do |collection, entry|
       collection.entries << entry
