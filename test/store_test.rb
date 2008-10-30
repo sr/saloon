@@ -289,7 +289,7 @@ describe 'Store' do
       @entry.stubs(:to_h).returns(hash)
       @entry.expects(:edit_url).returns('entry edit url')
       do_create
-      hash[:id].should.equal 'entry edit url'
+      hash['id'].should.equal 'entry edit url'
     end
 
     it 'sets the document id' do
@@ -297,7 +297,7 @@ describe 'Store' do
       @database.stubs(:save).returns('id' => 1234)
       @entry.stubs(:to_h).returns(hash)
       do_create
-      hash[:_id].should.equal 1234
+      hash['_id'].should.equal 1234
     end
 
     it 'sets the document revision' do
@@ -305,21 +305,21 @@ describe 'Store' do
       @database.stubs(:save).returns('rev' => 3455)
       @entry.stubs(:to_h).returns(hash)
       do_create
-      hash[:_rev].should.equal 3455
+      hash['_rev'].should.equal 3455
     end
 
     it 'sets the type of the document to "entry"' do
       hash = {}
       @entry.stubs(:to_h).returns(hash)
       do_create
-      hash[:type].should.equal 'entry'
+      hash['type'].should.equal 'entry'
     end
 
     it 'sets the collection to which the entry belongs' do
       hash = {}
       @entry.stubs(:to_h).returns(hash)
       do_create
-      hash[:collection].should.equal 'my_collection'
+      hash['collection'].should.equal 'my_collection'
     end
 
     it 'saves the hash to the database' do
@@ -340,6 +340,7 @@ describe 'Store' do
     end
 
     setup do
+      @entry = {'_id' => 'my_entry', '_rev' => 1234, 'collection' => 'my_collection'}
       @new_entry = Atom::Entry.new(:title => 'foo', :content => 'bar')
       Atom::Entry.stubs(:parse).returns(@new_entry)
       @store.stubs(:get_entry).returns(:id => 'document id')
@@ -371,9 +372,14 @@ describe 'Store' do
       do_update
     end
 
-    it 'coerces to updated entry to an hash and saves it' do
-      @new_entry.expects(:to_h).returns('entry as an hash')
-      @database.expects(:save).with('entry as an hash')
+    it 'coerces to updated entry to an hash' do
+      @new_entry.expects(:to_h).returns(:title => 'foo', :content => 'bar')
+      do_update
+    end
+
+    it 'updates the document' do
+      # TODO: better test
+      @database.expects(:save)
       do_update
     end
   end

@@ -59,11 +59,11 @@ class Store
     # TODO: remove that hack
     entry.edit_url = (collection['value']['base'] + '/').to_uri.join(document['id']).to_s
     database.save entry.to_h.update(
-      :_id => document['id'],
-      :_rev => document['rev'],
-      :type => 'entry',
-      :id   => entry.edit_url,
-      :collection => collection['id']
+      '_id'  => document['id'],
+      '_rev' => document['rev'],
+      'type' => 'entry',
+      'id'   => entry.edit_url,
+      'collection' => collection['id']
     )
     entry
   end
@@ -74,7 +74,11 @@ class Store
     new_entry.id = entry['id']
     new_entry.updated!
     new_entry.edited!
-    database.save(new_entry.to_h)
+    database.save new_entry.to_h.update(
+      '_id'        => entry['_id'],
+      '_rev'       => entry['_rev'],
+      'collection' => entry['collection']
+    )
   end
 
   def delete_entry(collection, entry)
