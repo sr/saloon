@@ -15,7 +15,7 @@ module Atom
   class Entry
     Elements = %w(title id summary content published edited updated links).freeze
 
-    def to_h
+    def to_doc
       Elements.inject({}) do |hash, element|
         case element
         when 'links'

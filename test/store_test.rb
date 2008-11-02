@@ -239,7 +239,7 @@ describe 'Store' do
       @entry = Atom::Entry.new(:title => 'foo', :content => 'bar')
       @hash  = {:title => 'foo', :content => 'bar'}
       Atom::Entry.stubs(:parse).returns(@entry)
-      @entry.stubs(:to_h).returns(@hash)
+      @entry.stubs(:to_doc).returns(@hash)
       @store.stubs(:get).returns(@collection)
       @database.stubs(:save).returns('id' => 1234)
     end
@@ -276,7 +276,7 @@ describe 'Store' do
     end
 
     it 'coerces the parsed entry to an hash and saves it' do
-      @entry.expects(:to_h).returns(@hash)
+      @entry.expects(:to_doc).returns(@hash)
       @database.expects(:save).with(@hash).returns('id' => 1234, 'rev' => 3456)
       do_create
     end
@@ -289,7 +289,7 @@ describe 'Store' do
 
     it 'sets the entry id using the edit url' do
       hash = {}
-      @entry.stubs(:to_h).returns(hash)
+      @entry.stubs(:to_doc).returns(hash)
       @entry.expects(:edit_url).returns('entry edit url')
       do_create
       hash['id'].should.equal 'entry edit url'
@@ -298,7 +298,7 @@ describe 'Store' do
     it 'sets the document id' do
       hash = {}
       @database.stubs(:save).returns('id' => 1234)
-      @entry.stubs(:to_h).returns(hash)
+      @entry.stubs(:to_doc).returns(hash)
       do_create
       hash['_id'].should.equal 1234
     end
@@ -306,28 +306,28 @@ describe 'Store' do
     it 'sets the document revision' do
       hash = {}
       @database.stubs(:save).returns('rev' => 3455)
-      @entry.stubs(:to_h).returns(hash)
+      @entry.stubs(:to_doc).returns(hash)
       do_create
       hash['_rev'].should.equal 3455
     end
 
     it 'sets the type of the document to "entry"' do
       hash = {}
-      @entry.stubs(:to_h).returns(hash)
+      @entry.stubs(:to_doc).returns(hash)
       do_create
       hash['type'].should.equal 'entry'
     end
 
     it 'sets the collection to which the entry belongs' do
       hash = {}
-      @entry.stubs(:to_h).returns(hash)
+      @entry.stubs(:to_doc).returns(hash)
       do_create
       hash['collection'].should.equal 'my_collection'
     end
 
     it 'saves the hash to the database' do
       hash = stub('final hash', :update => 'foo')
-      @entry.stubs(:to_h).returns({}, hash)
+      @entry.stubs(:to_doc).returns({}, hash)
       @database.expects(:save).with('foo')
       do_create
     end
@@ -376,7 +376,7 @@ describe 'Store' do
     end
 
     it 'coerces to updated entry to an hash' do
-      @new_entry.expects(:to_h).returns(:title => 'foo', :content => 'bar')
+      @new_entry.expects(:to_doc).returns(:title => 'foo', :content => 'bar')
       do_update
     end
 

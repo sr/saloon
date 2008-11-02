@@ -29,8 +29,8 @@ describe 'Hash#to_atom_entry' do
     @hash.to_atom_entry.should.be.an.instance_of Atom::Entry
   end
 
-  %w(title
-  id
+  %w(id
+  title
   summary
   content
   published
@@ -67,7 +67,7 @@ describe 'Hash#to_atom_feed' do
   end
 end
 
-describe 'Atom::Entry#to_h' do
+describe 'Atom::Entry#to_doc' do
   setup do
     @entry = Atom::Entry.new(:title => 'foo', :summary => 'bar', :content => 'spam',
       :id => 'http://foo.org/my_entry')
@@ -76,20 +76,20 @@ describe 'Atom::Entry#to_h' do
     @entry.links.new(:rel => 'self', :href => 'http://example.org')
   end
 
-  %w(title
-  id
+  %w(id
+  title
   summary
   content
   published
   edited
   updated).each do |element|
     it "imports '#{element}' element" do
-      @entry.to_h[element].to_s.should.equal @entry.send(element).to_s
+      @entry.to_doc[element].to_s.should.equal @entry.send(element).to_s
     end
 
     it 'imports links' do
-      Atom::Link.new(@entry.to_h['links'].first).should.equal @entry.links.first
-      Atom::Link.new(@entry.to_h['links'].last).should.equal @entry.links.last
+      Atom::Link.new(@entry.to_doc['links'].first).should.equal @entry.links.first
+      Atom::Link.new(@entry.to_doc['links'].last).should.equal @entry.links.last
     end
   end
 end

@@ -55,10 +55,10 @@ class Store
     entry.updated!
     entry.edited!
 
-    document = database.save(entry.to_h)
+    document = database.save(entry.to_doc)
     # TODO: remove that hack
     entry.edit_url = (collection['value']['base'] + '/').to_uri.join(document['id']).to_s
-    database.save entry.to_h.update(
+    database.save entry.to_doc.update(
       '_id'  => document['id'],
       '_rev' => document['rev'],
       'type' => 'entry',
@@ -75,7 +75,7 @@ class Store
     new_entry.edit_url = entry.to_atom_entry.edit_url
     new_entry.updated!
     new_entry.edited!
-    database.save new_entry.to_h.update(
+    database.save new_entry.to_doc.update(
       '_id'        => entry['_id'],
       '_rev'       => entry['_rev'],
       'collection' => entry['collection'],
