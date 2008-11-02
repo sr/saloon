@@ -24,25 +24,18 @@ describe 'Store' do
     ]
   end
 
-  it 'has a  db_name' do
-    @store.db_name.should.equal TestDatabase
+  it 'has a database name' do
+    @store.database_name.should.equal TestDatabase
   end
 
   describe 'Helpers' do
     setup do
-      Store.class_eval do
-        public :server, :database
-        public :get_entry, :get
-        public :atom_entries_from, :atom_collection_from
-      end
+      Store.class_eval {
+        public :database, :get_entry, :get, :atom_entries_from, :atom_collection_from
+      }
 
       @store = Store.new(TestDatabase)
       @store.stubs(:database).returns(@database)
-    end
-
-    specify '#server returns a new CouchRest object' do
-      CouchRest.expects(:new)
-      Store.new(TestDatabase).server
     end
 
     specify '#database returns a new CouchRest::Database object' do

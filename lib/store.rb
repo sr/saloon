@@ -12,10 +12,10 @@ class CollectionNotFound < RuntimeError; end
 class EntryNotFound < RuntimeError; end
 
 class Store
-  attr_reader :db_name
+  attr_reader :database_name
 
-  def initialize(db_name)
-    @db_name = db_name
+  def initialize(database_name)
+    @database_name = database_name
   end
 
   def service
@@ -90,12 +90,8 @@ class Store
   end
 
   private
-    def server
-      @server ||= CouchRest.new
-    end
-
     def database
-      @database ||= server.database(db_name)
+      @database ||= CouchRest.new.database(database_name)
     end
 
     def get(view, key)
