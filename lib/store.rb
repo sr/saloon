@@ -21,12 +21,14 @@ class Store
   def service
     service = Atom::Service.new
     workspace = service.workspaces.new
-    database.view('collection/all')['rows'].each do |row|
-      collection = Atom::Collection.new(row['value']['base'])
-      collection.title = row['value']['title']
+
+    database.view('collection/all')['rows'].each do |doc|
+      collection = Atom::Collection.new(doc['value']['base'])
+      collection.title = doc['value']['title']
       collection.accepts = 'application/atom+xml;type=entry'
       workspace.collections << collection
     end
+
     service
   end
 
@@ -34,7 +36,7 @@ class Store
     documents = database.view('entry/by_collection',
       :startkey => [collection, 0], :endkey => [collection, 1])['rows']
     collection = atom_collection_from(documents) or raise CollectionNotFound
-    entries    = atom_entries_from(documents).sort_by{ |e| e.edited }.reverse
+    entries    = atom_entries_from(documents).sort_by { |e| e.edited }.reverse
 
     entries.inject(collection) do |collection, entry|
       collection.entries << entry
@@ -65,22 +67,26 @@ class Store
       'id'   => entry.edit_url,
       'collection' => collection['id']
     )
+
     entry
   end
 
   def update_entry(collection, entry, new_entry)
     entry = get_entry(collection, entry) or raise EntryNotFound
     new_entry = Atom::Entry.parse(new_entry)
+
     new_entry.id = entry['id']
     new_entry.edit_url = entry.to_atom_entry.edit_url
     new_entry.updated!
     new_entry.edited!
+
     database.save new_entry.to_doc.update(
       '_id'        => entry['_id'],
       '_rev'       => entry['_rev'],
       'collection' => entry['collection'],
       'type'       => 'entry'
     )
+
     new_entry
   end
 
