@@ -89,7 +89,15 @@ class Store
     database.delete(entry)
   end
 
-  protected
+  private
+    def server
+      @server ||= CouchRest.new
+    end
+
+    def database
+      @database ||= server.database(db_name)
+    end
+
     def get(view, key)
       response = database.view(view, :key => key, :count => 1)
       response['rows'].empty? ? nil : response['rows'].first
@@ -108,14 +116,5 @@ class Store
     def atom_entries_from(rows)
       entries = rows.select { |row| row['value']['type'] == 'entry' }
       entries.any? ? entries.map { |row| row['value'].to_atom_entry } : nil
-    end
-
-  private
-    def server
-      @server ||= CouchRest.new
-    end
-
-    def database
-      @database ||= server.database(db_name)
     end
 end
