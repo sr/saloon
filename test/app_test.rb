@@ -14,7 +14,7 @@ describe 'App' do
 
     setup do
       @service = stub('an Atom::Service', :to_s => 'xml')
-      @store.stubs(:service).returns(@service)
+      @store.stubs(:service_document).returns(@service)
     end
 
     it 'is successful' do
@@ -28,7 +28,7 @@ describe 'App' do
     end
 
     it 'gets the service document' do
-      @store.expects(:service).returns(@service)
+      @store.expects(:service_document).returns(@service)
       do_get
     end
 

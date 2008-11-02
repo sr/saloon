@@ -18,7 +18,7 @@ class Store
     @database_name = database_name
   end
 
-  def service
+  def service_document
     service = Atom::Service.new
     workspace = service.workspaces.new
 

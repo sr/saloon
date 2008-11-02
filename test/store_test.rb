@@ -125,17 +125,17 @@ describe 'Store' do
 
     it 'creates a new service document' do
       Atom::Service.expects(:new).returns(Atom::Service.new)
-      @store.service
+      @store.service_document
     end
 
     it 'creates a new workspace' do
       @service.workspaces.expects(:new).returns(Atom::Workspace.new)
-      @store.service
+      @store.service_document
     end
 
     it 'retrieves collections using the view collection/all' do
       @database.expects(:view).with('collection/all').returns('rows' => [])
-      @store.service
+      @store.service_document
     end
 
     it 'creates a collection and appends it to the workspace' do
@@ -145,11 +145,11 @@ describe 'Store' do
       collection.expects(:title=).with('foo')
       collection.expects(:accepts=).with('application/atom+xml;type=entry')
       @workspace.collections.expects(:<<).with(collection)
-      @store.service
+      @store.service_document
     end
 
     it 'returns the service document' do
-      @store.service.should.be.an.instance_of Atom::Service
+      @store.service_document.should.be.an.instance_of Atom::Service
     end
   end
 
