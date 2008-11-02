@@ -104,13 +104,13 @@ class Store
       entry ? entry['value'] : nil
     end
 
-    def atom_collection_from(rows)
-      collection = rows.detect { |row| row['value']['type'] == 'collection' }
+    def atom_collection_from(documents)
+      collection = documents.detect { |doc| doc['value']['type'] == 'collection' }
       collection ? collection['value'].to_atom_feed : nil
     end
 
-    def atom_entries_from(rows)
-      entries = rows.select { |row| row['value']['type'] == 'entry' }
-      entries.any? ? entries.map { |row| row['value'].to_atom_entry } : nil
+    def atom_entries_from(documents)
+      entries = documents.select { |doc| doc['value']['type'] == 'entry' }
+      entries.any? ? entries.map { |doc| doc['value'].to_atom_entry } : nil
     end
 end
