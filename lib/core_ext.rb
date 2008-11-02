@@ -10,26 +10,24 @@ module Atom
         self['href']     == link['href'] &&
         self['rel']      == link['rel']
     end
+
+    def to_doc
+      { :rel => self['rel'], :href => self['href'] }
+    end
   end
 
   class Entry
     Elements = %w(title id summary content published edited updated links).freeze
 
     def to_doc
-      Elements.inject({}) do |hash, element|
-        case element
-        when 'links'
-          hash['links'] = links.inject([]) do |links, link|
-            # TODO: Atom::Link#to_h instead
-            links << {:rel => link['rel'], :href => link['href']}
-            links
-          end
-        else
-          if value = self.send(element)
-            hash[element] = value.to_s
-          end
+      Elements.inject({}) do |doc, element|
+        if element == 'links'
+          doc['links'] = links.map(&:to_doc)
+        elsif value = self.send(element)
+          doc[element] = value.to_s
         end
-        hash
+
+        doc
       end
     end
   end
@@ -58,12 +56,13 @@ class Hash
     hash = stringify_keys
 
     Atom::Entry::Elements.inject(Atom::Entry.new) do |entry, element|
-      case element
-      when 'links'
+      next(entry) unless hash[element]
+
+      if element == 'links'
         hash['links'].each { |link| entry.links.new(link) }
       else
         entry.send("#{element}=", hash[element])
-      end if hash[element]
+      end
 
       entry
     end
