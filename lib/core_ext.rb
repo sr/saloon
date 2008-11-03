@@ -19,6 +19,22 @@ module Atom
   class Entry
     Elements = %w(title id summary content published edited updated links).freeze
 
+    def self.from_doc(doc)
+      doc = doc.stringify_keys
+
+      Atom::Entry::Elements.inject(Atom::Entry.new) do |entry, element|
+        next(entry) unless doc[element]
+
+        if element == 'links'
+          doc['links'].each { |link| entry.links.new(link) }
+        else
+          entry.send("#{element}=", doc[element])
+        end
+
+        entry
+      end
+    end
+
     def to_doc
       Elements.inject({}) do |doc, element|
         if element == 'links'
@@ -28,6 +44,19 @@ module Atom
         end
 
         doc
+      end
+    end
+  end
+
+  class Feed
+    Elements = %w(base title subtitle).freeze
+
+    def self.from_doc(doc)
+      doc = doc.stringify_keys
+
+      Elements.inject(Atom::Feed.new) do |feed, element|
+        feed.send("#{element}=", doc[element]) if doc[element]
+        feed
       end
     end
   end
@@ -41,31 +70,12 @@ class Hash
     end
   end
 
-  FeedElements = %w(base title subtitle).freeze
-
-  def to_atom_feed
-    hash = stringify_keys
-
-    FeedElements.inject(Atom::Feed.new) do |feed, element|
-      feed.send("#{element}=", hash[element]) if hash[element]
-      feed
-    end
+  def to_atom_entry
+    Atom::Entry.from_doc(self)
   end
 
-  def to_atom_entry
-    hash = stringify_keys
-
-    Atom::Entry::Elements.inject(Atom::Entry.new) do |entry, element|
-      next(entry) unless hash[element]
-
-      if element == 'links'
-        hash['links'].each { |link| entry.links.new(link) }
-      else
-        entry.send("#{element}=", hash[element])
-      end
-
-      entry
-    end
+  def to_atom_feed
+    Atom::Feed.from_doc(self)
   end
 end
 

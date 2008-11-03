@@ -1,15 +1,9 @@
 require File.dirname(__FILE__) + '/test_helper'
 require File.dirname(__FILE__) + '/../lib/core_ext'
 
-describe 'String#to_uri' do
-  it 'parses itselfs into an Addressable::URI' do
-    'http://foo.org'.to_uri.should.equal Addressable::URI.parse('http://foo.org')
-  end
-end
-
-describe 'Hash#to_atom_entry' do
+describe 'Atom::Entry#from_doc' do
   setup do
-    @hash = { :title => 'Atom-Powered Robots Run Amok',
+    @doc = { :title => 'Atom-Powered Robots Run Amok',
       :id         => 'http://foo.org/bar',
       :summary    => 'Some text.',
       :content    => 'Even more text...',
@@ -26,7 +20,7 @@ describe 'Hash#to_atom_entry' do
   end
 
   it 'returns an Atom::Entry' do
-    @hash.to_atom_entry.should.be.an.instance_of Atom::Entry
+    Atom::Entry.from_doc(@doc).should.be.an.instance_of Atom::Entry
   end
 
   %w(id
@@ -37,33 +31,15 @@ describe 'Hash#to_atom_entry' do
   edited
   updated).map(&:to_sym).each do |element|
     it "imports '#{element}' element" do
-      @hash.to_atom_entry.send(element).to_s.should.equal @hash[element].to_s
+      Atom::Entry.from_doc(@doc).send(element).to_s.should.equal @doc[element].to_s
     end
   end
 
   it 'imports links' do
-    @hash.to_atom_entry.links.first.should.
+    Atom::Entry.from_doc(@doc).links.first.should.
       equal Atom::Link.new(:rel => 'self', :href => 'http://foo.org/bar/spam.atom')
-    @hash.to_atom_entry.links.first.should.
-      equal Atom::Link.new(:rel => 'self', :href => 'http://foo.org/bar/spam.atom')
-  end
-end
-
-describe 'Hash#to_atom_feed' do
-  setup do
-    @hash = { :title => 'My AtomPub Feed',
-      :subtitle => 'Has a Subtitle!',
-      :base     => 'http://0.0.0.0:1234/' }
-  end
-
-  it 'returns an Atom::Feed' do
-    @hash.to_atom_feed.should.be.an.instance_of Atom::Feed
-  end
-
-  %w(base title subtitle).map(&:to_sym).each do |element|
-    it "converts #{element}" do
-      @hash.to_atom_feed.send(element).to_s.should.equal @hash[element]
-    end
+    Atom::Entry.from_doc(@doc).links.last.should.
+      equal Atom::Link.new(:rel => 'edit', :href => 'http://foo.org/edit/bar')
   end
 end
 
@@ -91,5 +67,43 @@ describe 'Atom::Entry#to_doc' do
       Atom::Link.new(@entry.to_doc['links'].first).should.equal @entry.links.first
       Atom::Link.new(@entry.to_doc['links'].last).should.equal @entry.links.last
     end
+  end
+end
+
+describe 'Hash#to_atom_entry' do
+  it 'is an handy helper for Atom::Entry.from_doc' do
+    Atom::Entry.expects(:from_doc).with(:foo => 'bar').returns(Atom::Entry.new)
+    {:foo => 'bar'}.to_atom_entry.should.be.an.instance_of(Atom::Entry)
+  end
+end
+
+describe 'Atom::Feed#from_doc' do
+  setup do
+    @doc = { :title => 'My AtomPub Feed',
+      :subtitle => 'Has a Subtitle!',
+      :base     => 'http://0.0.0.0:1234/' }
+  end
+
+  it 'returns an Atom::Feed' do
+    Atom::Feed.from_doc(@doc).should.be.an.instance_of Atom::Feed
+  end
+
+  %w(base title subtitle).map(&:to_sym).each do |element|
+    it "converts #{element}" do
+      Atom::Feed.from_doc(@doc).send(element).to_s.should.equal @doc[element]
+    end
+  end
+end
+
+describe 'Hash#to_atom_feed' do
+  it 'is an handy helper for Atom::Feed.from_doc' do
+    Atom::Entry.expects(:from_doc).with(:foo => 'bar').returns(Atom::Entry.new)
+    {:foo => 'bar'}.to_atom_entry.should.be.an.instance_of(Atom::Entry)
+  end
+end
+
+describe 'String#to_uri' do
+  it 'parses itselfs into an Addressable::URI' do
+    'http://foo.org'.to_uri.should.equal Addressable::URI.parse('http://foo.org')
   end
 end
