@@ -1,7 +1,7 @@
 Saloon
 ======
 
-[AtomPub][] server implemented in [Sinatra][] and [CouchDB][].
+[AtomPub][] server implemented using [Sinatra][] and [CouchDB][].
 
 ## Getting started
 
@@ -55,7 +55,7 @@ Written by Simon Rozet <simon@rozet.name>
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 [AtomPub]: http://bitworking.org/projects/atom/rfc5023.html
-[Sinatra]: http://github.com/bmizerany/sinatra
+[Sinatra]: http://sinatra.rubyforge.org
 [CouchDB]: http://couchdb.org
 [APE]: http://ape.rubyforge.org
 [report]: http://atonie.org/2008/saloon/report
