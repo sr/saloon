@@ -11,13 +11,44 @@ CollectionId = 'my_collection'
 $couch = CouchRest.new
 $database = $couch.database(DatabaseName)
 
+desc 'Default: run all tests'
 task :default => :test
 
-task :test do
-  sh 'testrb test/*.rb'
+task :test => [:"test:unit", :"test:integration"]
+
+namespace :test do
+  desc 'Run unit tests'
+  task :unit do
+    sh 'testrb test/*.rb'
+  end
+
+  desc 'Run integration tests using APE and open browser at the result page'
+  task :integration => :ape do
+    unless `ps -ax`.grep(/lib\/ape\.rb/).any?
+      fork { `ruby lib/app.rb -p1234` }
+      sleep 2
+    end
+
+    sh 'open http://0.0.0.0:4000/atompub/go?uri=http://0.0.0.0:1234/'
+  end
+
+  task :ape => :"ape:run"
+  namespace :ape do
+    task :run => :repo do
+      unless `ps -ax`.grep(/ape\/bin\/ape_server/).any?
+        fork { `ruby ape/bin/ape_server` }
+        sleep 2
+      end
+    end
+
+    task :repo do
+      `git clone git://github.com/sr/ape.git` unless File.directory?('ape')
+    end
+  end
 end
 
 task :coverage => :"coverage:verify"
+
 Rcov::RcovTask.new('coverage:generate') do |t|
   t.test_files = FileList['test/*_test.rb']
   t.rcov_opts << '-Ilib'
