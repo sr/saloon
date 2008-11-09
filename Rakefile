@@ -31,6 +31,7 @@ namespace :test do
     report.close
     `open file://#{report.path}`
     Process.kill('KILL', $pid)
+    Process.kill('KILL', app_pid)
   end
 
   task :ape do
@@ -46,10 +47,16 @@ namespace :test do
   end
 
   task :app do
-    unless `ps ax`.grep(/lib\/ape\.rb/).any?
+    unless app_pid
       $pid = fork { `ruby lib/app.rb -p1234` }
       sleep 2
     end
+  end
+
+  def app_pid
+    found = `ps ax`.grep(/ruby lib\/app\.rb/)
+    return nil if found.empty?
+    found.first.lstrip[0..3].to_i
   end
 end
 
