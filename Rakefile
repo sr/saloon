@@ -23,26 +23,32 @@ namespace :test do
   end
 
   desc 'Run integration tests using APE and open browser at the result page'
-  task :integration => :ape do
-    unless `ps -ax`.grep(/lib\/ape\.rb/).any?
-      fork { `ruby lib/app.rb -p1234` }
-      sleep 2
-    end
-
-    sh 'open http://0.0.0.0:4000/atompub/go?uri=http://0.0.0.0:1234/'
+  task :integration => [:ape, :app] do
+    validator = Ape::Ape.new(:output => 'html', :debug => false)
+    validator.check('http://0.0.0.0:1234/')
+    report = Tempfile.new('saloon')
+    validator.report(report)
+    report.close
+    `open file://#{report.path}`
+    Process.kill('KILL', $pid)
   end
 
-  task :ape => :"ape:run"
-  namespace :ape do
-    task :run => :repo do
-      unless `ps -ax`.grep(/ape\/bin\/ape_server/).any?
-        fork { `ruby ape/bin/ape_server` }
-        sleep 2
-      end
-    end
+  task :ape do
+    `git clone git://github.com/sr/ape.git` unless File.directory?('ape')
 
-    task :repo do
-      `git clone git://github.com/sr/ape.git` unless File.directory?('ape')
+    require File.dirname(__FILE__) + '/ape/lib/ape'
+
+    Ape::Ape.class_eval do
+      alias :old_initialize :initialize
+
+      def initialize(args); old_initialize(args); @dialogs = {}; end
+    end
+  end
+
+  task :app do
+    unless `ps ax`.grep(/lib\/ape\.rb/).any?
+      $pid = fork { `ruby lib/app.rb -p1234` }
+      sleep 2
     end
   end
 end
