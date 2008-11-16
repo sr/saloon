@@ -1,14 +1,12 @@
-$: << File.dirname(__FILE__) + '/vendor/couchrest/lib'
-
 require 'rubygems'
 require 'rake/testtask'
 require 'rcov/rcovtask'
-require 'couch_rest'
+require 'couchy'
 
 DatabaseName = 'saloonrb'
 CollectionId = 'my_collection'
 
-$couch = CouchRest.new
+$couch = Couchy.new
 $database = $couch.database(DatabaseName)
 
 desc 'Default: run all tests'
@@ -29,8 +27,7 @@ namespace :test do
     report = Tempfile.new('saloon')
     validator.report(report)
     report.close
-    `open file://#{report.path}`
-    Process.kill('KILL', $pid)
+    `firefox --new-tab file://#{report.path}`
     Process.kill('KILL', app_pid)
   end
 
@@ -48,7 +45,7 @@ namespace :test do
 
   task :app do
     unless app_pid
-      $pid = fork { `ruby lib/app.rb -p1234` }
+      fork { `ruby lib/app.rb -p1234` }
       sleep 2
     end
   end
@@ -56,7 +53,7 @@ namespace :test do
   def app_pid
     found = `ps ax`.grep(/ruby lib\/app\.rb/)
     return nil if found.empty?
-    found.first.lstrip[0..3].to_i
+    found.first.lstrip[/^(\d+)/] && $1.to_i
   end
 end
 
@@ -129,7 +126,7 @@ namespace :database do
 
     desc 'Create views'
     task :views do
-      sh File.dirname(__FILE__) + "/vendor/couchrest/bin/couch-view-push -a #{DatabaseName}"
+      sh "couchy push views #{DatabaseName} --force"
     end
   end
 end

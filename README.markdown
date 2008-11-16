@@ -12,7 +12,7 @@ Saloon
 
 ## Running the tests
 
-    gem install test-spec mocha 
+    gem install sr-couchy test-spec mocha
     rake database:redo test
 
 ## Status

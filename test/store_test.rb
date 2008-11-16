@@ -41,7 +41,7 @@ describe 'Store' do
     specify '#database returns a new CouchRest::Database object' do
       Store.class_eval { public :database }
       store = Store.new(TestDatabase)
-      store.database.should.be.an.instance_of(CouchRest::Database)
+      store.database.should.be.an.instance_of(Couchy::Database)
       store.database.name.should.equal TestDatabase
     end
 

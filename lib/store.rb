@@ -1,7 +1,5 @@
-$:.unshift File.dirname(__FILE__) + '/../vendor/couchrest/lib'
-
 require 'rubygems'
-require 'couch_rest'
+require 'couchy'
 require 'atom/service'
 require 'atom/collection'
 require 'atom/entry'
@@ -59,7 +57,7 @@ class Store
 
     document = database.save(entry.to_doc)
     # TODO: remove that hack
-    entry.edit_url = (collection['value']['base'] + '/').to_uri.join(document['id']).to_s
+    entry.edit_url = (collection['value']['base'] + '/').to_uri.join(document['id'].to_s).to_s
     database.save entry.to_doc.update(
       '_id'  => document['id'],
       '_rev' => document['rev'],
@@ -97,7 +95,7 @@ class Store
 
   private
     def database
-      @database ||= CouchRest.new.database(database_name)
+      @database ||= Couchy.new.database(database_name)
     end
 
     def get(view, key)
